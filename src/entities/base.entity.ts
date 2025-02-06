@@ -1,0 +1,21 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+
+@Entity()
+export class AbstractBaseEntity {
+  @ApiProperty()
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @ApiProperty()
+  @CreateDateColumn({ nullable: true })
+  createdAt: Date;
+
+  @ApiProperty()
+  @UpdateDateColumn({ nullable: true })
+  updatedAt: Date;
+
+  @ApiProperty()
+  @UpdateDateColumn({ nullable: true })
+  deletedAt: Date;
+}
