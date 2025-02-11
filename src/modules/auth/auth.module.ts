@@ -1,39 +1,38 @@
-import { JwtModule } from '@nestjs/jwt';
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthService } from './auth.service';
-import { UserModule } from 'src/modules/user/user.module';
-import { GoogleStrategy } from './strategies/google.strategy';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import appConfig from '../../../config/auth.config';
 import { User } from '../user/entities/user.entity';
-import { UserService } from '../user/user.service';
-import { AuthController } from './auth.controller';
-import { LocalStrategy } from './strategies/local.strategy';
-import { JwtStrategy } from './strategies/jwt.strategy';
+import UserService from '../user/user.service';
+import RegistrationController from './auth.controller';
+import AuthenticationService from './auth.service';
+import { GoogleAuthService } from './google-auth.service';
+import { FacebookStrategy } from './strategies/facebook.strategy';
+import { GoogleStrategy } from './strategies/google.strategy';
+import { EmailService } from '../mailer/mailer.service';
 
 @Module({
-  imports: [
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        secret: configService.getOrThrow('JWT_SECRET'),
-        signOptions: {
-          expiresIn: configService.getOrThrow('JWT_EXPIRATION'),
-        },
-      }),
-      inject: [ConfigService],
-    }),
-    ConfigModule,
-    UserModule,
-    TypeOrmModule.forFeature([User,]),
-  ],
-  controllers: [AuthController],
+  controllers: [RegistrationController],
   providers: [
+    AuthenticationService,
+    Repository,
     UserService,
-    AuthService,
     GoogleStrategy,
-    LocalStrategy,
-    JwtStrategy,
+    GoogleAuthService,
+    FacebookStrategy,
+    EmailService,
   ],
+  imports: [
+    TypeOrmModule.forFeature([User]),
+    PassportModule,
+    JwtModule.register({
+      global: true,
+      secret: appConfig().jwtSecret,
+      signOptions: { expiresIn: `${appConfig().jwtExpiry}s` },
+    }),
+  ],
+  exports: [],
 })
 export class AuthModule {}

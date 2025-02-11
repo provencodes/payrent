@@ -12,10 +12,10 @@ export class AbstractBaseEntity {
   createdAt: Date;
 
   @ApiProperty()
-  @UpdateDateColumn({ nullable: true })
+  @UpdateDateColumn({ nullable: true, default: null })
   updatedAt: Date;
 
   @ApiProperty()
-  @UpdateDateColumn({ nullable: true })
+  @UpdateDateColumn({ nullable: true, default: null })
   deletedAt: Date;
 }
