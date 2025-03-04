@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+} from 'typeorm';
 
 @Entity()
 export class AbstractBaseEntity {
@@ -16,6 +22,6 @@ export class AbstractBaseEntity {
   updatedAt: Date;
 
   @ApiProperty()
-  @UpdateDateColumn({ nullable: true, default: null })
+  @DeleteDateColumn({ nullable: true, default: null })
   deletedAt: Date;
 }

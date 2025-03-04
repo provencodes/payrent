@@ -9,9 +9,9 @@ import serverConfig from '../config/server.config';
 import dataSource from './database/datasource';
 import { AuthGuard } from './guards/auth.guard';
 import HealthController from './health.controller';
+import ProbeController from './probe.controller';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
-import ProbeController from './probe.controller';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 

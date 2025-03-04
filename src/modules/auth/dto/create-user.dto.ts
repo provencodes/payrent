@@ -18,8 +18,7 @@ export class CreateUserDTO {
   email: string;
 
   @ApiProperty({
-    description:
-      'The unique username for the new user, Auto-generated if omitted.',
+    description: 'The unique username for the new user.',
     example: 'john_doe',
     required: true,
     type: String,
@@ -33,6 +32,7 @@ export class CreateUserDTO {
     required: true,
     type: String,
   })
+  @IsString()
   @IsNotEmpty()
   @MinLength(8, { message: 'Password must be at least 8 characters long' })
   @Matches(/(?=.*[a-z])/, {
