@@ -1,0 +1,43 @@
+<body style="margin:0px;">
+  <!-- Header with Logo -->
+    <div style="text-align: center; padding: 20px; background-color: white; display:flex; justify-content: center;">
+      <!-- img src="https://i.ibb.co/41hvFgw/image.png" alt="payrent" style="width: 70px; height: auto; margin:0 auto;" -->
+      <img src="https://i.ibb.co/QvydN5dB/Payrent-Grey.png" alt="Payrent" style="width: auto; height: auto; margin:0 auto;">
+    </div>
+
+  <div style="background: linear-gradient(180.54deg, #F7EEE7 0.47%, #F9E9A3 277.67%, #FFDD00 438.32%);">
+  <div style="min-height: 90vh; padding: 20px; font-family: 'DM Sans', sans-serif;">   
+
+    <!-- Image -->
+    {{#if imageSrc}}
+    <div style="text-align: center; padding: 20px;">
+      <img src="{{imageSrc}}" alt="{{imageAlt}}" style="width: 150px; height: auto;">
+    </div>
+    {{/if}}
+
+    <!-- Title -->
+    <h1 style="color: black; font-size: 24px; text-align: center; margin-bottom: 20px;">{{title}}</h1>
+
+    <!-- Content -->
+    <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; padding: 20px;">
+      {{> @partial-block }}
+    </div>
+
+    <!-- Footer with Social Links -->
+    <div style="text-align: center; padding: 20px; font-size: 12px; color: #000000; max-width: 600px; margin: 0 auto;">
+      <div style="margin-bottom: 10px;">
+        <a href="#" style="margin: 0 10px;"><img width="25px" src='https://app-rsrc.getbee.io/public/resources/social-networks-icon-sets/t-only-logo-dark-gray/twitter@2x.png' alt='Twitter' /></a>
+        <a href="#" style="margin: 0 10px;"><img width="25px" src='https://app-rsrc.getbee.io/public/resources/social-networks-icon-sets/t-only-logo-dark-gray/instagram@2x.png' alt='Instagram' /></a>
+        <a href="#" style="margin: 0 10px;"><img width="25px" src='https://app-rsrc.getbee.io/public/resources/social-networks-icon-sets/t-only-logo-dark-gray/facebook@2x.png' alt='Facebook' /></a>
+        <a href="#" style="margin: 0 10px;"><img width="25px" src='https://app-rsrc.getbee.io/public/resources/social-networks-icon-sets/t-only-logo-dark-gray/discord@2x.png' alt='Discord' /></a>
+      </div>
+      <p>
+       <strong>
+        You are receiving this email because you just signed up on Payrent. If you did not sign up or believe this message was sent in error, please contact our support team immediately.
+       </strong>
+      </p>
+      <p>If these emails get annoying, please feel free to <a href="#" style="color: black;">unsubscribe</a>.</p>
+    </div>
+  </div>
+  </div>
+</body>

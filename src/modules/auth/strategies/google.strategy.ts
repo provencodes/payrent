@@ -1,34 +1,57 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Strategy, VerifyCallback } from 'passport-google-oauth20';
-import { ConfigService } from '@nestjs/config';
-import { AuthService } from '../auth.service';
+import { Repository } from 'typeorm';
+import config from '../../../../config/auth.config';
+import { User } from '../../user/entities/user.entity';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(
-    private configService: ConfigService,
-    private authService: AuthService,
+    @InjectRepository(User) private userRepository: Repository<User>,
   ) {
     super({
-      clientID: configService.get<string>('GOOGLE_CLIENT_ID'),
-      clientSecret: configService.get<string>('GOOGLE_CLIENT_SECRET'),
-      callbackURL: 'http://localhost:3000/auth/google/callback',
-      scope: ['email', 'profile'],
+      clientID: config().google.clientID,
+      clientSecret: config().google.clientSecret,
+      callbackURL: config().google.callbackURL,
+      scope: ['profile', 'email'],
     });
   }
 
   async validate(
-    _accessToken: string,
-    _refreshToken: string,
-    profile: any,
+    accessToken: string,
+    refreshToken: string,
+    profile,
     done: VerifyCallback,
-  ): Promise<any> {
-    const { emails, name } = profile;
-    const user = await this.authService.validateGoogleUser({
-      email: emails[0].value,
-      displayName: name.givenName,
-    });
-    done(null, user);
+  ): Promise<unknown> {
+    try {
+      const { emails } = profile;
+
+      if (!emails || emails.length === 0) {
+        throw new Error('No email associated with this Google account');
+      }
+
+      const user = {
+        email: emails[0].value,
+        username: emails[0].value.split('@')[0],
+        password: '',
+        is_active: true,
+        secret: '',
+      };
+
+      let existingUser = await this.userRepository.findOne({
+        where: { email: user.email },
+      });
+
+      if (!existingUser) {
+        existingUser = this.userRepository.create(user);
+        await this.userRepository.save(existingUser);
+      }
+
+      return done(null, existingUser);
+    } catch (error) {
+      return done(error, false);
+    }
   }
 }

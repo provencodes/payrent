@@ -2,10 +2,12 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { AppModule } from './app.module';
+import * as cookieParser from "cookie-parser";
 import { Logger } from 'nestjs-pino';
 import { DataSource } from 'typeorm';
+import { AppModule } from './app.module';
 import { initializeDataSource } from './database/datasource';
+
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -26,19 +28,22 @@ async function bootstrap() {
   }
 
   app.enable('trust proxy');
+  app.set("trust proxy", true);
+  
   app.useLogger(logger);
-  // app.use(cookieParser());
+  app.use(cookieParser());
   app.enableCors({
     origin: true,
     credentials: true,
   });
 
   app.setGlobalPrefix('api/v1', {
-    exclude: ['/', 'api', 'api/v1', 'api/docs'],
+    exclude: ['/', 'api', 'api/v1', 'api/docs', 'health', 'probe'],
   });
+
   const options = new DocumentBuilder()
   .setTitle('PAYRENT API')
-  .setDescription('API Document for PayRent Server')
+  .setDescription('API Documentation for PayRent Server')
   .setVersion('1.0')
   .addTag('PayRent Application')
   .addBearerAuth()
@@ -53,7 +58,7 @@ await app.listen(port);
 logger.log({
   message: 'server started 🚀',
   port,
-  url: `http://localhost:${port}/api/docs`,
+  url: `http://localhost:${port}/api/v1`,
 });
 
 
