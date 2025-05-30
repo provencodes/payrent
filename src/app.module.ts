@@ -14,7 +14,13 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
-
+import { PropertyModule } from './modules/property/property.module';
+import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
+import { PaymentModule } from './modules/payment/payment.module';
+import { LandlordModule } from './modules/landlord/landlord.module';
+import { LegalModule } from './modules/legal/legal.module';
+import { WalletModule } from './modules/wallet/wallet.module';
+import { TenantModule } from './modules/tenant/tenant.module';
 @Module({
   providers: [
     {
@@ -65,6 +71,13 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
     }),
     UserModule,
     AuthModule,
+    PropertyModule,
+    CloudinaryModule,
+    PaymentModule,
+    LandlordModule,
+    LegalModule,
+    WalletModule,
+    TenantModule,
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -98,5 +111,6 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
       inject: [ConfigService],
     }),
   ],
+  controllers: [HealthController, ProbeController],
 })
 export class AppModule {}

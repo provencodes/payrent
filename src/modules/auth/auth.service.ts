@@ -29,6 +29,7 @@ import UpdateUserRecordOption from '../user/options/UpdateUserRecordOption';
 import * as SYS_MSG from '../../helpers/systemMessages';
 import { generateUsername } from 'unique-username-generator';
 import UserResponseDTO from '../user/dto/user-response.dto';
+import { WalletService } from '../wallet/wallet.service';
 
 @Injectable()
 export default class AuthenticationService {
@@ -36,13 +37,14 @@ export default class AuthenticationService {
     private userService: UserService,
     private jwtService: JwtService,
     private emailService: EmailService,
+    private readonly walletService: WalletService,
   ) {}
 
   async createNewUser(createUserDto: CreateUserDTO) {
-    if (createUserDto.username) {
+    if (createUserDto.name) {
       const usernameExists = await this.userService.getUserRecord({
-        identifier: createUserDto.username,
-        identifierType: 'username',
+        identifier: createUserDto.name,
+        identifierType: 'name',
       });
 
       if (usernameExists) {
@@ -52,7 +54,7 @@ export default class AuthenticationService {
         );
       }
     } else {
-      createUserDto.username = await this.generateUniqueUsername();
+      createUserDto.name = await this.generateUniqueUsername();
     }
 
     const emailExists = await this.userService.getUserRecord({
@@ -69,7 +71,7 @@ export default class AuthenticationService {
 
     const payload = {
       email: createUserDto.email,
-      username: createUserDto.username,
+      name: createUserDto.name,
     };
     const token = this.jwtService.sign(payload);
 
@@ -78,12 +80,14 @@ export default class AuthenticationService {
       subject: 'Email Verification',
       template: 'email-verification',
       context: {
-        username: createUserDto.username,
+        name: createUserDto.name,
         verifyEmailIllustration: 'https://i.ibb.co/wLNf8sx/image.png',
         verificationUrl: new URL(`${process.env.CLIENT_BASE_URL}/${token}`)
           .href,
       },
     };
+
+    await this.emailService.sendEMail(sendMailDto);
 
     const user = await this.userService.createUser(
       Object.assign(createUserDto, {
@@ -91,7 +95,8 @@ export default class AuthenticationService {
         emailVerificationTokenExpires: addMinutes(new Date(), 15),
       }),
     );
-    await this.emailService.sendEMail(sendMailDto);
+
+    await this.walletService.createWallet(user.id);
 
     return {
       message:
@@ -100,7 +105,7 @@ export default class AuthenticationService {
         user: {
           id: user.id,
           email: user.email,
-          username: user.username,
+          name: user.name,
         },
       },
       status_code: HttpStatus.CREATED,
@@ -116,7 +121,7 @@ export default class AuthenticationService {
       throw new CustomHttpException('user not found', HttpStatus.NOT_FOUND);
     }
 
-    if (findUser.isEmail_verified)
+    if (findUser.isEmailVerified)
       throw new CustomHttpException(
         'Email already verified',
         HttpStatus.CONFLICT,
@@ -124,14 +129,14 @@ export default class AuthenticationService {
 
     const newToken = this.jwtService.sign({
       email: findUser.email,
-      username: findUser.username,
+      name: findUser.name,
     });
     const sendMailDto = {
       to: findUser.email,
       subject: 'Email Verification',
       template: 'email-verification',
       context: {
-        username: findUser.username,
+        name: findUser.name,
         verifyEmailIllustration: 'https://i.ibb.co/wLNf8sx/image.png',
         verificationUrl: new URL(`${process.env.CLIENT_BASE_URL}/${newToken}`)
           .href,
@@ -175,7 +180,7 @@ export default class AuthenticationService {
 
       usernameExists = await this.userService.getUserRecord({
         identifier: userName,
-        identifierType: 'username',
+        identifierType: 'name',
       });
     } while (usernameExists !== null);
 
@@ -215,7 +220,7 @@ export default class AuthenticationService {
       const files = fs.readdirSync(directoryPath);
       const userCreationPayload = {
         email: userEmail,
-        username: userName,
+        name: userName,
         password: '',
         avatar: files[0],
       };
@@ -253,7 +258,7 @@ export default class AuthenticationService {
           user: {
             id: createdUser.id,
             email: createdUser.email || '',
-            username: createdUser.username || '',
+            name: createdUser.name || '',
           },
         },
         status_code: HttpStatus.CREATED,
@@ -268,7 +273,7 @@ export default class AuthenticationService {
         user: {
           id: userExists.id,
           email: userExists.email || '',
-          username: userExists.username || '',
+          username: userExists.name || '',
         },
       },
       access_token: accessToken,
@@ -364,7 +369,7 @@ export default class AuthenticationService {
 
   signJWT(user: UserResponseDTO): string {
     return this.jwtService.sign({
-      username: user.username,
+      username: user.name,
       sub: user.id,
       email: user.email,
     });
@@ -396,7 +401,7 @@ export default class AuthenticationService {
 
       const userCreationPayload = {
         email: userEmail,
-        username: userName,
+        name: userName,
         password: '',
       };
       const accessToken = this.jwtService.sign({
@@ -431,7 +436,7 @@ export default class AuthenticationService {
           user: {
             id: createdUser.id,
             email: createdUser.email || '',
-            username: createdUser.username || '',
+            username: createdUser.name || '',
           },
         },
         status_code: HttpStatus.CREATED,
@@ -446,7 +451,7 @@ export default class AuthenticationService {
         user: {
           id: userExists.id,
           email: userExists.email || '',
-          username: userExists.username || '',
+          username: userExists.name || '',
         },
       },
       access_token: accessToken,
@@ -482,7 +487,7 @@ export default class AuthenticationService {
       template: 'reset-password',
       context: {
         otp,
-        username: findUser.username,
+        username: findUser.name,
       },
     };
     await this.emailService.sendEMail(sendMailDto);
@@ -516,7 +521,7 @@ export default class AuthenticationService {
     if (!findUser) {
       throw new CustomHttpException('user not found', HttpStatus.NOT_FOUND);
     }
-    if (!findUser.isOtp_verified) {
+    if (!findUser.isOtpVerified) {
       throw new CustomHttpException('invalid otp', HttpStatus.BAD_REQUEST);
     }
 
