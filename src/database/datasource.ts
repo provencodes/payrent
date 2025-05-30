@@ -1,9 +1,10 @@
 import * as dotenv from 'dotenv';
 import { DataSource } from 'typeorm';
-
+import { readFileSync } from 'node:fs';
 dotenv.config();
 
 export const isDevelopment = process.env.NODE_ENV === 'development';
+console.log('datasource: ');
 
 const dataSource = new DataSource({
   type: process.env.DB_TYPE as 'postgres',
@@ -14,9 +15,14 @@ const dataSource = new DataSource({
   database: process.env.DB_NAME,
   entities: [process.env.DB_ENTITIES],
   migrations: [process.env.DB_MIGRATIONS],
-  synchronize: true,
+  synchronize: isDevelopment,
   migrationsTableName: 'migrations',
-  ssl: process.env.DB_SSL === 'true',
+  ssl: isDevelopment
+    ? false
+    : {
+        ca: readFileSync('/home/oluwaseyi/projects/payRent/ca.pem').toString(),
+        rejectUnauthorized: true,
+      },
 });
 export async function initializeDataSource() {
   if (!dataSource.isInitialized) {

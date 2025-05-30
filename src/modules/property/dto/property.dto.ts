@@ -1,0 +1,73 @@
+import {
+  IsOptional,
+  IsString,
+  IsBoolean,
+  IsEnum,
+  IsDateString,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+
+export class GetPropertiesDto {
+  @ApiPropertyOptional() @IsOptional() @IsString() listedBy?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() owner?: string;
+  @ApiPropertyOptional() @IsOptional() @IsBoolean() approved?: boolean;
+  @ApiPropertyOptional() @IsOptional() @IsString() renovationType?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() constructionStatus?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() status?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Type(() => Number)
+  interestRate?: number;
+  @ApiPropertyOptional() @IsOptional() @IsBoolean() agreeToTerms?: boolean;
+  @ApiPropertyOptional() @IsOptional() @Type(() => Number) rentalPrice?: number;
+  @ApiPropertyOptional() @IsOptional() @IsString() floorLevel?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() address?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() listingType?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() type?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() title?: string;
+
+  // New: Partial match
+  @ApiPropertyOptional() @IsOptional() @IsString() titleSearch?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() addressSearch?: string;
+
+  // New: Range filters
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Type(() => Number)
+  rentalPriceMin?: number;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Type(() => Number)
+  rentalPriceMax?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Type(() => Number)
+  interestRateMin?: number;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @Type(() => Number)
+  interestRateMax?: number;
+
+  @ApiPropertyOptional() @IsOptional() @IsDateString() createdAfter?: string;
+  @ApiPropertyOptional() @IsOptional() @IsDateString() createdBefore?: string;
+
+  // Pagination and sorting
+  @ApiPropertyOptional({ example: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  page: number = 1;
+  @ApiPropertyOptional({ example: 10 })
+  @IsOptional()
+  @Type(() => Number)
+  limit: number = 10;
+  @ApiPropertyOptional({ example: 'createdAt' })
+  @IsOptional()
+  @IsString()
+  orderBy: string = 'createdAt';
+  @ApiPropertyOptional({ example: 'desc' })
+  @IsOptional()
+  @IsEnum(['asc', 'desc'])
+  order: 'asc' | 'desc' = 'desc';
+}

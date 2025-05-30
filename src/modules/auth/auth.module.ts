@@ -12,6 +12,7 @@ import { GoogleAuthService } from './google-auth.service';
 import { FacebookStrategy } from './strategies/facebook.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { EmailService } from '../mailer/mailer.service';
+import { WalletModule } from '../wallet/wallet.module';
 
 @Module({
   controllers: [RegistrationController],
@@ -27,6 +28,7 @@ import { EmailService } from '../mailer/mailer.service';
   imports: [
     TypeOrmModule.forFeature([User]),
     PassportModule,
+    WalletModule,
     JwtModule.register({
       global: true,
       secret: appConfig().jwtSecret,

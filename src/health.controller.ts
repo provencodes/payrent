@@ -6,19 +6,22 @@ export default class HealthController {
   @skipAuth()
   @Get('/')
   public home() {
-    return { status_code: 200, message: 'Welcome to NestJs Backend Endpoint' };
+    return { status_code: 200, message: 'Welcome to PayRent API Server' };
   }
 
   @skipAuth()
   @Get('api')
   public api() {
-    return { status_code: 200, message: 'Welcome to NestJs Backend Endpoint' };
+    return { status_code: 200, message: 'Welcome to PayRent API Server' };
   }
 
   @skipAuth()
   @Get('api/v1')
   public v1() {
-    return { status_code: 200, message: 'Welcome to version 1 of NestJS Backend Endpoint' };
+    return {
+      status_code: 200,
+      message: 'Welcome to version 1 of PayRent API Server',
+    };
   }
 
   @skipAuth()
@@ -26,5 +29,4 @@ export default class HealthController {
   public health() {
     return { status_code: 200, message: 'This is a healthy endpoint' };
   }
-
 }

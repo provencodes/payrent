@@ -2,7 +2,7 @@ import UserInterface from "../interfaces/user.interface";
 
 type CreateNewUserOptions = Pick<
   UserInterface,
-  "email" | "username" | "password"
+  "email" | "name" | "password"
 > & {
   admin_secret?: string;
 };

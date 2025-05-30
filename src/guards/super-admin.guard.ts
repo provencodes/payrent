@@ -14,7 +14,7 @@ export class SuperAdminGuard implements CanActivate {
   const request = context.switchToHttp().getRequest();
   const userId = request.user.sub;
 
-  const user = await this.userRepository.findOne({ where: { id: userId, is_admin: true } });
+  const user = await this.userRepository.findOne({ where: { id: userId, isAdmin: true } });
   if (!user) throw new CustomHttpException(FORBIDDEN_ACTION, HttpStatus.FORBIDDEN);
   return true;
  }
