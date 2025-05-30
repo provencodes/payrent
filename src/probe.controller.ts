@@ -6,6 +6,6 @@ export default class ProbeController {
   @skipAuth()
   @Get('/')
   public test() {
-    return { status_code: 200, message: 'I am the NestJs api responding' };
+    return { status_code: 200, message: 'I am the PayRent api responding' };
   }
 }

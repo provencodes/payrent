@@ -4,7 +4,7 @@ type UserIdentifierOptionsType =
       identifier: string;
     }
   | {
-      identifierType: 'username';
+      identifierType: 'name';
       identifier: string;
     }
   | {

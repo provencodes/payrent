@@ -1,6 +1,6 @@
-import { UpdateRecordGeneric } from "../../../helpers/updateRecordGeneric";
-import UserInterface from "../interfaces/user.interface";
-import UserIdentifierOptionsType from "./UserIdentifierOptions";
+import { UpdateRecordGeneric } from '../../../helpers/updateRecordGeneric';
+import UserInterface from '../interfaces/user.interface';
+import UserIdentifierOptionsType from './UserIdentifierOptions';
 
 type UserUpdateRecord = Partial<UserInterface>;
 

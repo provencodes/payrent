@@ -2,12 +2,12 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as cookieParser from "cookie-parser";
+import * as cookieParser from 'cookie-parser';
 import { Logger } from 'nestjs-pino';
 import { DataSource } from 'typeorm';
 import { AppModule } from './app.module';
 import { initializeDataSource } from './database/datasource';
-
+import { ResponseInterceptor } from './shared/interceptors/response.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -28,8 +28,8 @@ async function bootstrap() {
   }
 
   app.enable('trust proxy');
-  app.set("trust proxy", true);
-  
+  app.set('trust proxy', true);
+
   app.useLogger(logger);
   app.use(cookieParser());
   app.enableCors({
@@ -40,34 +40,33 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1', {
     exclude: ['/', 'api', 'api/v1', 'api/docs', 'health', 'probe'],
   });
+  app.useGlobalInterceptors(new ResponseInterceptor());
 
   const options = new DocumentBuilder()
-  .setTitle('PAYRENT API')
-  .setDescription('API Documentation for PayRent Server')
-  .setVersion('1.0')
-  .addTag('PayRent Application')
-  .addBearerAuth()
-  .build();
+    .setTitle('PAYRENT API')
+    .setDescription('API Documentation for PayRent Server')
+    .setVersion('1.0')
+    .addTag('PayRent Application')
+    .addBearerAuth()
+    .build();
 
-const document = SwaggerModule.createDocument(app, options);
-SwaggerModule.setup('api/docs', app, document);
+  const document = SwaggerModule.createDocument(app, options);
+  SwaggerModule.setup('api/docs', app, document);
 
-const port = app.get<ConfigService>(ConfigService).get<number>('server.port');
-await app.listen(port);
+  const port = app.get<ConfigService>(ConfigService).get<number>('server.port');
+  await app.listen(port);
 
-logger.log({
-  message: 'server started 🚀',
-  port,
-  url: `http://localhost:${port}/api/v1`,
-});
+  logger.log({
+    message: 'server started 🚀',
+    port,
+    url: `http://localhost:${port}/api/v1`,
+  });
 
-
-SwaggerModule.setup('swagger', app, document, {
-  jsonDocumentUrl: 'swagger/json',
-});
-
+  SwaggerModule.setup('swagger', app, document, {
+    jsonDocumentUrl: 'swagger/json',
+  });
 }
 bootstrap().catch((err) => {
-console.error('Error during bootstrap', err);
-process.exit(1);
+  console.error('Error during bootstrap', err);
+  process.exit(1);
 });

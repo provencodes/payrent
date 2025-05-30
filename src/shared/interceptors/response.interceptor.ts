@@ -7,9 +7,9 @@ import {
   InternalServerErrorException,
   Logger,
   NestInterceptor,
-} from "@nestjs/common";
-import { Observable, throwError } from "rxjs";
-import { catchError, map } from "rxjs/operators";
+} from '@nestjs/common';
+import { Observable, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
 @Injectable()
 export class ResponseInterceptor implements NestInterceptor {
@@ -17,11 +17,11 @@ export class ResponseInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     return next.handle().pipe(
       map((res: { message: string; data: unknown }) =>
-        this.responseHandler(res, context)
+        this.responseHandler(res, context),
       ),
       catchError((err: unknown) =>
-        throwError(() => this.errorHandler(err, context))
-      )
+        throwError(() => this.errorHandler(err, context)),
+      ),
     );
   }
 
@@ -29,24 +29,24 @@ export class ResponseInterceptor implements NestInterceptor {
     const req = context.switchToHttp().getRequest();
     if (exception instanceof HttpException) return exception;
     this.logger.error(
-      `Error processing request for ${req.method} ${req.url}, Message: ${exception["message"]}, Stack: ${exception["stack"]}`
+      `Error processing request for ${req.method} ${req.url}, Message: ${exception['message']}, Stack: ${exception['stack']}`,
     );
     return new InternalServerErrorException({
       status_code: HttpStatus.INTERNAL_SERVER_ERROR,
-      message: "Internal server error",
+      message: 'Internal server error',
     });
   }
 
   responseHandler(
     res: { message: string; data: unknown },
-    context: ExecutionContext
+    context: ExecutionContext,
   ) {
     const ctx = context.switchToHttp();
     const response = ctx.getResponse();
     const status_code = response.statusCode;
 
-    response.setHeader("Content-Type", "application/json");
-    if (typeof res === "object") {
+    response.setHeader('Content-Type', 'application/json');
+    if (typeof res === 'object') {
       const { message, ...data } = res;
 
       return {
