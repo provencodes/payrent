@@ -21,6 +21,7 @@ import { LandlordModule } from './modules/landlord/landlord.module';
 import { LegalModule } from './modules/legal/legal.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 import { TenantModule } from './modules/tenant/tenant.module';
+console.log(process.env.PROFILE);
 @Module({
   providers: [
     {
