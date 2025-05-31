@@ -21,7 +21,8 @@ import { LandlordModule } from './modules/landlord/landlord.module';
 import { LegalModule } from './modules/legal/legal.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 import { TenantModule } from './modules/tenant/tenant.module';
-console.log(process.env.PROFILE);
+const profile = process.env.PROFILE;
+console.log(profile);
 @Module({
   providers: [
     {
@@ -43,7 +44,7 @@ console.log(process.env.PROFILE);
   ],
   imports: [
     ConfigModule.forRoot({
-      envFilePath: ['.env.development.local', `.env.${process.env.PROFILE}`],
+      envFilePath: ['.env.development.local', `.env.${profile}`],
       isGlobal: true,
       load: [serverConfig, authConfig],
       validationSchema: Joi.object({
