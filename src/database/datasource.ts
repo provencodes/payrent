@@ -8,7 +8,7 @@ dotenv.config();
 // );
 
 export const isDevelopment = process.env.NODE_ENV === 'development';
-console.log('datasource: ');
+console.log('datasource: ', isDevelopment);
 
 const dataSource = new DataSource({
   type: 'postgres',
