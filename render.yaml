@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: nest-api
+    env: node
+    buildCommand: yarn build
+    startCommand: node dist/main.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10080
