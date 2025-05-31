@@ -21,6 +21,10 @@ import { LandlordModule } from './modules/landlord/landlord.module';
 import { LegalModule } from './modules/legal/legal.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 import { TenantModule } from './modules/tenant/tenant.module';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
+
 const profile = process.env.PROFILE;
 console.log(profile);
 @Module({

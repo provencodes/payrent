@@ -1,19 +1,21 @@
-import { HttpStatus, Injectable } from "@nestjs/common";
-import { PassportStrategy } from "@nestjs/passport";
-import { Profile, Strategy } from "passport-facebook";
-import config from "../../../../config/auth.config";
-import { CustomHttpException } from "../../../helpers/custom-http-filter";
-import * as SYS_MSG from "../../../helpers/systemMessages";
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { PassportStrategy } from '@nestjs/passport';
+import { Profile, Strategy } from 'passport-facebook';
+import config from '../../../../config/auth.config';
+import { CustomHttpException } from '../../../helpers/custom-http-filter';
+import * as SYS_MSG from '../../../helpers/systemMessages';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @Injectable()
-export class FacebookStrategy extends PassportStrategy(Strategy, "facebook") {
+export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
   constructor() {
     super({
       clientID: config().facebook.appID,
       clientSecret: config().facebook.appSecret,
       callbackURL: `${process.env.HOST_URL}/api/v1/auth/facebook/redirect`,
-      scope: ["email", "public_profile"],
-      profileFields: ["name", "emails"],
+      scope: ['email', 'public_profile'],
+      profileFields: ['name', 'emails'],
     });
   }
 
@@ -21,12 +23,12 @@ export class FacebookStrategy extends PassportStrategy(Strategy, "facebook") {
     accessToken: string,
     refreshToken: string,
     profile: Profile,
-    done
+    done,
   ) {
     if (!profile.emails) {
       throw new CustomHttpException(
         SYS_MSG.FACEBOOK_EMAIL_NOT_FOUND,
-        HttpStatus.UNPROCESSABLE_ENTITY
+        HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }
     const generateUserName = ({ givenName, familyName }) =>
