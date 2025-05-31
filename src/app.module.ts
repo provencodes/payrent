@@ -60,7 +60,7 @@ console.log(profile);
             'testing',
             'staging',
           )
-          .required(),
+          .default('development'),
         PORT: Joi.number().required(),
       }),
     }),
