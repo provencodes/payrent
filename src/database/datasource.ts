@@ -1,7 +1,11 @@
 import * as dotenv from 'dotenv';
 import { DataSource } from 'typeorm';
-import { readFileSync } from 'node:fs';
+// import { readFileSync } from 'node:fs';
 dotenv.config();
+
+const caCert = Buffer.from(process.env.DB_CERT_BASE64, 'base64').toString(
+  'utf-8',
+);
 
 export const isDevelopment = process.env.NODE_ENV === 'development';
 console.log('datasource: ');
@@ -20,7 +24,8 @@ const dataSource = new DataSource({
   ssl: isDevelopment
     ? false
     : {
-        ca: readFileSync('/home/oluwaseyi/projects/payRent/ca.pem').toString(),
+        // ca: readFileSync('/home/oluwaseyi/projects/payRent/ca.pem').toString(),
+        ca: caCert,
         rejectUnauthorized: true,
       },
 });
