@@ -64,7 +64,7 @@ console.log(profile);
             'testing',
             'staging',
           )
-          .default('development'),
+          .required(),
         PORT: Joi.number().required(),
       }),
     }),
