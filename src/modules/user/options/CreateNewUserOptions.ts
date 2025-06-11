@@ -1,8 +1,8 @@
-import UserInterface from "../interfaces/user.interface";
+import { UserInterface } from '../interfaces/user.interface';
 
 type CreateNewUserOptions = Pick<
   UserInterface,
-  "email" | "name" | "password"
+  'email' | 'name' | 'password'
 > & {
   admin_secret?: string;
 };

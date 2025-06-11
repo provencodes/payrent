@@ -3,7 +3,7 @@ export class LoginResponseDto {
   data: {
     user: {
       id: string;
-      username: string;
+      name: string;
       email: string;
     };
   };

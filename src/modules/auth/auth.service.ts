@@ -20,7 +20,7 @@ import { EmailService } from '../mailer/mailer.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { RequestUser } from './interfaces/request.userdto';
 import { randomInt } from 'crypto';
-import UserInterface from '../user/interfaces/user.interface';
+import { UserInterface } from '../user/interfaces/user.interface';
 import FacebookAuthPayload from './interfaces/FacebookAuthPayloadInterface';
 import { addMinutes, isBefore } from 'date-fns';
 import { User } from '../user/entities/user.entity';
@@ -327,49 +327,60 @@ export default class AuthenticationService {
   async loginUser(
     loginDto: LoginDto,
   ): Promise<LoginResponseDto | { status_code: number; message: string }> {
-    const { email, password } = loginDto;
+    try {
+      const { email, password } = loginDto;
 
-    const user = await this.userService.getUserRecord({
-      identifier: email,
-      identifierType: 'email',
-    });
+      const user: User = await this.userService.getUserRecord({
+        identifier: email,
+        identifierType: 'email',
+      });
 
-    console.log(user);
-    if (!user) {
-      throw new CustomHttpException(
-        INVALID_CREDENTIALS,
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
+      // console.log(user);
+      if (!user) {
+        throw new CustomHttpException(
+          INVALID_CREDENTIALS,
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+      const isMatch = await bcrypt.compare(password, user.password);
 
-    if (!isMatch) {
-      throw new CustomHttpException(
-        INVALID_CREDENTIALS,
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
+      if (!isMatch) {
+        throw new CustomHttpException(
+          INVALID_CREDENTIALS,
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
 
-    const access_token = this.signJWT(user);
+      if (user && !user.isEmailVerified) {
+        return {
+          status_code: 400,
+          message: 'Complete your verification first',
+        };
+      }
 
-    const responsePayload = {
-      access_token,
-      data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          username: user.username,
+      const access_token = this.signJWT(user);
+
+      const responsePayload = {
+        access_token,
+        data: {
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          },
         },
-      },
-    };
+      };
 
-    return { message: LOGIN_SUCCESSFUL, ...responsePayload };
+      return { message: LOGIN_SUCCESSFUL, ...responsePayload };
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   signJWT(user: UserResponseDTO): string {
     return this.jwtService.sign({
-      username: user.name,
+      name: user.name,
       sub: user.id,
       email: user.email,
     });

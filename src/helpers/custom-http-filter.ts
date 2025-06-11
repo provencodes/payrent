@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus } from "@nestjs/common";
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 export class CustomHttpException extends HttpException {
   constructor(response: string | Record<string, unknown>, status: HttpStatus) {

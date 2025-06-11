@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import UserResponseDTO from './dto/user-response.dto';
@@ -10,6 +10,7 @@ import UserIdentifierOptionsType from './options/UserIdentifierOptions';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CustomHttpException } from '../../helpers/custom-http-filter';
 import * as SYS_MSG from '../../helpers/systemMessages';
+// import { UserInterface } from './interfaces/user.interface';
 
 @Injectable()
 export default class UserService {
@@ -39,37 +40,51 @@ export default class UserService {
   }
 
   async getUserByEmail(email: string) {
-    const user: UserResponseDTO = await this.userRepository.findOne({
-      where: { email: email },
-    });
-    return user;
+    try {
+      const user: User = await this.userRepository.findOne({
+        where: { email: email },
+      });
+      // if (!user) {
+      //   return {
+      //     status_code: 401,
+      //     message: `user with email: ${email} is not registered yet`,
+      //   };
+      // }
+      return user;
+    } catch (error) {
+      // throw new NotFoundException(`not found. Consider creating an account`);
+    }
   }
 
   private async getUserByUsername(name: string) {
-    const user: UserResponseDTO = await this.userRepository.findOne({
+    const user: User = await this.userRepository.findOne({
       where: { name: name },
     });
     return user;
   }
 
   async getUserById(identifier: string) {
-    const user = await this.userRepository.findOne({
+    const user: User = await this.userRepository.findOne({
       where: { id: identifier },
     });
     return user;
   }
 
-  async getUserRecord(identifierOptions: UserIdentifierOptionsType) {
+  async getUserRecord(
+    identifierOptions: UserIdentifierOptionsType,
+  ): Promise<User> {
     const { identifier, identifierType } = identifierOptions;
 
     const GetRecord = {
       id: async () => this.getUserById(String(identifier)),
-      username: async () => this.getUserByUsername(String(identifier)),
+      name: async () => this.getUserByUsername(String(identifier)),
       email: async () => this.getUserByEmail(String(identifier)),
     };
 
     if (!identifierType || !GetRecord[identifierType]) {
-      return null;
+      throw new NotFoundException(
+        `user not found, Consider creating an account`,
+      );
     }
 
     return await GetRecord[identifierType]();
