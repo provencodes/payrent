@@ -26,7 +26,6 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 const profile = process.env.PROFILE;
-console.log(profile);
 @Module({
   providers: [
     {
@@ -68,7 +67,16 @@ console.log(profile);
         PORT: Joi.number().required(),
       }),
     }),
-    LoggerModule.forRoot(),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        transport: {
+          target: 'pino-pretty',
+          options: {
+            singleLine: true,
+          },
+        },
+      },
+    }),
     TypeOrmModule.forRootAsync({
       useFactory: async () => ({
         ...dataSource.options,

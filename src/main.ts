@@ -1,8 +1,10 @@
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { Request, Response, NextFunction } from 'express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as cookieParser from 'cookie-parser';
+import * as basicAuth from 'basic-auth';
 import { Logger } from 'nestjs-pino';
 import { DataSource } from 'typeorm';
 import { AppModule } from './app.module';
@@ -27,6 +29,21 @@ async function bootstrap() {
     process.exit(1);
   }
 
+  app.use(
+    ['/api/docs', '/api/docs-json'],
+    (req: Request, res: Response, next: NextFunction) => {
+      const user = basicAuth(req);
+      const username = process.env.SWAGGER_USER || 'payrent';
+      const password = process.env.SWAGGER_PASSWORD || 'PAYRENT';
+
+      if (!user || user.name !== username || user.pass !== password) {
+        res.set('WWW-Authenticate', 'Basic realm="Swagger"');
+        return res.status(401).send('Authentication required.');
+      }
+      next();
+    },
+  );
+
   app.enable('trust proxy');
   app.set('trust proxy', true);
 
@@ -48,10 +65,15 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('PayRent Application')
     .addBearerAuth()
+    // .setContact('Payrent Dev Team', 'https://sparkly.so', 'admin@sparkly.so')
+    .setLicense('MIT', 'https://opensource.org/licenses/MIT')
+    // .setTermsOfService('https://sparkly.so/terms')
     .build();
 
   const document = SwaggerModule.createDocument(app, options);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('api/docs', app, document, {
+    customSiteTitle: 'Payrent API Docs',
+  });
 
   const port = app.get<ConfigService>(ConfigService).get<number>('server.port');
   await app.listen(port);
