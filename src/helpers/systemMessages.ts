@@ -36,7 +36,7 @@ export const FETCH_TIMEZONE_FAILURE =
   'Error Occurred while creating Timezone, kindly try again';
 export const SUCCESS = 'Timezone fetched successfully';
 export const TIMEZONE_ALREADY_EXISTS = 'Timezone already exists';
-export const INVALID_CREDENTIALS = 'Invalid username or password';
+export const INVALID_CREDENTIALS = 'Invalid email or password';
 export const LOGIN_SUCCESSFUL = 'Login successful';
 export const LOGIN_ERROR = 'An error occurred during login';
 export const EMAIL_SENT = 'Email sent successfully';

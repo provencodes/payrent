@@ -41,75 +41,83 @@ export default class AuthenticationService {
   ) {}
 
   async createNewUser(createUserDto: CreateUserDTO) {
-    if (createUserDto.name) {
-      const usernameExists = await this.userService.getUserRecord({
-        identifier: createUserDto.name,
-        identifierType: 'name',
+    try {
+      if (createUserDto.name) {
+        const usernameExists = await this.userService.getUserRecord({
+          identifier: createUserDto.name,
+          identifierType: 'name',
+        });
+
+        if (usernameExists) {
+          return {
+            status_code: HttpStatus.BAD_REQUEST,
+            message: SYS_MSG.USER_ACCOUNT_EXIST,
+          };
+        }
+      } else {
+        createUserDto.name = await this.generateUniqueUsername();
+      }
+
+      const emailExists = await this.userService.getUserRecord({
+        identifier: createUserDto.email,
+        identifierType: 'email',
       });
 
-      if (usernameExists) {
-        throw new CustomHttpException(
-          SYS_MSG.USER_ACCOUNT_EXIST,
-          HttpStatus.BAD_REQUEST,
-        );
+      if (emailExists) {
+        return {
+          status_code: HttpStatus.BAD_REQUEST,
+          message: SYS_MSG.USER_ACCOUNT_EXIST,
+        };
       }
-    } else {
-      createUserDto.name = await this.generateUniqueUsername();
-    }
 
-    const emailExists = await this.userService.getUserRecord({
-      identifier: createUserDto.email,
-      identifierType: 'email',
-    });
-
-    if (emailExists) {
-      throw new CustomHttpException(
-        SYS_MSG.USER_ACCOUNT_EXIST,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    const payload = {
-      email: createUserDto.email,
-      name: createUserDto.name,
-    };
-    const token = this.jwtService.sign(payload);
-
-    const sendMailDto = {
-      to: createUserDto.email,
-      subject: 'Email Verification',
-      template: 'email-verification',
-      context: {
+      const payload = {
+        email: createUserDto.email,
         name: createUserDto.name,
-        verifyEmailIllustration: 'https://i.ibb.co/wLNf8sx/image.png',
-        verificationUrl: new URL(`${process.env.CLIENT_BASE_URL}/${token}`)
-          .href,
-      },
-    };
+      };
+      const token = this.jwtService.sign(payload);
 
-    await this.emailService.sendEMail(sendMailDto);
-
-    const user = await this.userService.createUser(
-      Object.assign(createUserDto, {
-        emailVerificationToken: token,
-        emailVerificationTokenExpires: addMinutes(new Date(), 15),
-      }),
-    );
-
-    await this.walletService.createWallet(user.id);
-
-    return {
-      message:
-        'User created successfully, please check your mail for verification!',
-      data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
+      const sendMailDto = {
+        to: createUserDto.email,
+        subject: 'Email Verification',
+        template: 'email-verification',
+        context: {
+          name: createUserDto.name,
+          verifyEmailIllustration: 'https://i.ibb.co/wLNf8sx/image.png',
+          verificationUrl: new URL(`${process.env.CLIENT_BASE_URL}/${token}`)
+            .href,
         },
-      },
-      status_code: HttpStatus.CREATED,
-    };
+      };
+
+      await this.emailService.sendEMail(sendMailDto);
+
+      const user = await this.userService.createUser(
+        Object.assign(createUserDto, {
+          emailVerificationToken: token,
+          emailVerificationTokenExpires: addMinutes(new Date(), 15),
+        }),
+      );
+
+      await this.walletService.createWallet(user.id);
+
+      return {
+        message:
+          'User created successfully, please check your mail for verification!',
+        data: {
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          },
+        },
+        status_code: HttpStatus.CREATED,
+      };
+    } catch (error) {
+      console.error(error);
+      return {
+        status_code: HttpStatus.NOT_IMPLEMENTED,
+        message: 'Unable to create user.',
+      };
+    }
   }
 
   async resendVerificationEmail(email: string) {
@@ -337,19 +345,19 @@ export default class AuthenticationService {
 
       // console.log(user);
       if (!user) {
-        throw new CustomHttpException(
-          INVALID_CREDENTIALS,
-          HttpStatus.UNAUTHORIZED,
-        );
+        return {
+          status_code: HttpStatus.UNAUTHORIZED,
+          message: INVALID_CREDENTIALS,
+        };
       }
 
       const isMatch = await bcrypt.compare(password, user.password);
 
       if (!isMatch) {
-        throw new CustomHttpException(
-          INVALID_CREDENTIALS,
-          HttpStatus.UNAUTHORIZED,
-        );
+        return {
+          status_code: HttpStatus.UNAUTHORIZED,
+          message: INVALID_CREDENTIALS,
+        };
       }
 
       if (user && !user.isEmailVerified) {
@@ -375,6 +383,10 @@ export default class AuthenticationService {
       return { message: LOGIN_SUCCESSFUL, ...responsePayload };
     } catch (error) {
       console.error(error);
+      return {
+        status_code: HttpStatus.UNAUTHORIZED,
+        message: SYS_MSG.LOGIN_ERROR,
+      };
     }
   }
 
