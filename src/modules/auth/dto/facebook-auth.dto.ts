@@ -20,7 +20,7 @@ export class FacebookAuthPayloadDto {
   last_name: string;
 
   @ApiProperty({
-    description: 'The URL of the user\'s avatar',
+    description: "The URL of the user's avatar",
     example: 'https://example.com/avatar.jpg',
   })
   picture: string;

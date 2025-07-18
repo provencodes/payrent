@@ -70,12 +70,61 @@ export default class AuthenticationService {
         };
       }
 
-      const payload = {
-        email: createUserDto.email,
-        name: createUserDto.name,
-      };
-      const token = this.jwtService.sign(payload);
+      // const payload = {
+      //   email: createUserDto.email,
+      //   name: createUserDto.name,
+      // };
+      // const token = this.jwtService.sign(payload);
 
+      // const sendMailDto = {
+      //   to: createUserDto.email,
+      //   subject: 'Email Verification',
+      //   template: 'email-verification',
+      //   context: {
+      //     name: createUserDto.name,
+      //     verifyEmailIllustration: 'https://i.ibb.co/wLNf8sx/image.png',
+      //     verificationUrl: new URL(`${process.env.CLIENT_BASE_URL}/${token}`)
+      //       .href,
+      //   },
+      // };
+
+      // await this.emailService.sendEMail(sendMailDto);
+
+      // const user = await this.userService.createUser(
+      //   Object.assign(createUserDto, {
+      //     emailVerificationToken: token,
+      //     emailVerificationTokenExpires: addMinutes(new Date(), 15),
+      //   }),
+      // );
+
+      const currentTime = new Date();
+      const otp = await this.generateOtp();
+      const hashedOtp = await this.hashOtp(otp);
+      const otpCooldownExpires = new Date(
+        currentTime.getTime() + 1 * 60 * 1000,
+      );
+      // await this.userService.saveOtp(
+      //   findUser.id,
+      //   hashedOtp,
+      //   otpCooldownExpires,
+      // );
+
+      const user = await this.userService.createUser(
+        Object.assign(createUserDto, {
+          otp: hashedOtp,
+          otpCooldownExpires,
+        }),
+      );
+
+      // const sendMailDto: SendMailDto = {
+      //   to: createUserDto.email,
+      //   subject: 'OTP VERIFICATION',
+      //   template: 'otp-verification',
+      //   context: {
+      //     otp,
+      //     username: createUserDto.name,
+      //   },
+      // };
       const sendMailDto = {
         to: createUserDto.email,
         subject: 'Email Verification',
@@ -83,19 +132,10 @@ export default class AuthenticationService {
         context: {
           name: createUserDto.name,
           verifyEmailIllustration: 'https://i.ibb.co/wLNf8sx/image.png',
-          verificationUrl: new URL(`${process.env.CLIENT_BASE_URL}/${token}`)
-            .href,
+          otp,
         },
       };
-
       await this.emailService.sendEMail(sendMailDto);
-
-      const user = await this.userService.createUser(
-        Object.assign(createUserDto, {
-          emailVerificationToken: token,
-          emailVerificationTokenExpires: addMinutes(new Date(), 15),
-        }),
-      );
 
       await this.walletService.createWallet(user.id);
 
@@ -343,7 +383,6 @@ export default class AuthenticationService {
         identifierType: 'email',
       });
 
-      // console.log(user);
       if (!user) {
         return {
           status_code: HttpStatus.UNAUTHORIZED,
@@ -360,7 +399,7 @@ export default class AuthenticationService {
         };
       }
 
-      if (user && !user.isEmailVerified) {
+      if (user && !user.isOtpVerified) {
         return {
           status_code: 400,
           message: 'Complete your verification first',
@@ -434,7 +473,7 @@ export default class AuthenticationService {
       const sendMailDto = {
         to: userEmail,
         subject: 'Email Verification',
-        template: 'email-verification',
+        template: 'otp-verification',
         context: {
           username: userName,
           verifyEmailIllustration: 'https://i.ibb.co/wLNf8sx/image.png',
@@ -511,6 +550,47 @@ export default class AuthenticationService {
       context: {
         otp,
         username: findUser.name,
+      },
+    };
+    await this.emailService.sendEMail(sendMailDto);
+    return {
+      message: SYS_MSG.OTP_SENT_SUCCESSFULLY,
+      status_code: HttpStatus.OK,
+    };
+  }
+
+  async resendOtp(email: string) {
+    const findUser = await this.userService.getUserRecord({
+      identifier: email,
+      identifierType: 'email',
+    });
+    if (!findUser || !(findUser instanceof User)) {
+      return {
+        message: SYS_MSG.USER_NOT_FOUND,
+        status_code: HttpStatus.BAD_REQUEST,
+      };
+    }
+    const currentTime = new Date();
+    if (
+      findUser.otpCooldownExpires &&
+      findUser.otpCooldownExpires > currentTime
+    ) {
+      return {
+        message: SYS_MSG.TOO_MANY_OTP_REQUESTS,
+        status_code: HttpStatus.TOO_MANY_REQUESTS,
+      };
+    }
+    const otp = await this.generateOtp();
+    const hashedOtp = await this.hashOtp(otp);
+    const otpCooldownExpires = new Date(currentTime.getTime() + 1 * 60 * 1000);
+    await this.userService.saveOtp(findUser.id, hashedOtp, otpCooldownExpires);
+    const sendMailDto: SendMailDto = {
+      to: email,
+      subject: 'OTP Verification',
+      template: 'resend-otp',
+      context: {
+        otp,
+        name: findUser.name,
       },
     };
     await this.emailService.sendEMail(sendMailDto);

@@ -10,3 +10,34 @@
   <h3>Best regards, The Payrent Team</h3>
 </body>
 </html>
+
+{% comment %} {{#> layout title="Email Verification"
+  imageSrc=verifyEmailIllustration
+  imageAlt="Verify Image"
+}}
+  <p style="margin-bottom: 14px; font-size: larger; font-weight: 500;">
+   <strong>Hi {{name}},</strong></p>
+  <p style="margin-bottom: 16px;">
+    Welcome to Payrent! Before you can start enjoying our platform, we need to verify your email address.
+  </p>
+  <p style="margin-bottom: 16px;">
+    Please click the link below to verify your email:
+  </p>
+  <p style="margin-bottom: 16px; text-align: left;">
+    <a href="{{verificationUrl}}" style="overflow-wrap: break-word;color:rgb(32, 165, 226)">
+      {{verificationUrl}}
+    </a>
+  </p>
+  <p style="margin-bottom: 16px;">
+    This link will confirm your email address and activate your account.
+  </p>
+  <p style="margin-bottom: 16px;">
+    If you didn't create an account with Payrent, please ignore this email.
+  </p>
+  <p style="margin-bottom: 16px;">
+   <strong>
+    Best regards,
+   </strong>
+   </p>
+  <p>The Payrent Team</p>
+{{/layout}} {% endcomment %}

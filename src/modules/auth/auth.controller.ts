@@ -38,6 +38,7 @@ import FacebookAuthPayload from './interfaces/FacebookAuthPayloadInterface';
 import {
   EmailVerificationDto,
   ResendEmailVerificationDto,
+  VerifyOtpDto,
 } from './dto/verify-email.dto';
 import {
   ApiVerificationEmailResponsesDoc,
@@ -162,8 +163,29 @@ export default class RegistrationController {
     return await this.authService.sendResetPasswordPin(data.email);
   }
 
+  // @skipAuth()
+  // @ApiOperation({ summary: 'OTP verification' })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'OTP verified',
+  //   type: AuthResponseDto,
+  // })
+  // @ApiBadRequestResponse({ description: 'invalid OTP' })
+  // @HttpCode(400)
+  // @Post('reset-password/:email')
+  // async ressetPasswordWithOtp(
+  //   @Param('email') email: string,
+  //   @Body() data: { otp: string },
+  // ) {
+  //   return await this.authService.verifyOtp(
+  //     email.toString(),
+  //     data.otp.toString(),
+  //   );
+  // }
+
   @skipAuth()
   @ApiOperation({ summary: 'OTP verification' })
+  @ApiBody({ type: VerifyOtpDto })
   @ApiResponse({
     status: 200,
     description: 'OTP verified',
@@ -171,15 +193,25 @@ export default class RegistrationController {
   })
   @ApiBadRequestResponse({ description: 'invalid OTP' })
   @HttpCode(400)
-  @Post('reset-password/:email')
-  async verifyOtp(
-    @Param('email') email: string,
-    @Body() data: { otp: string },
-  ) {
+  @Post('verify-otp/:email')
+  async verifyOtp(@Param('email') email: string, @Body() data: VerifyOtpDto) {
     return await this.authService.verifyOtp(
       email.toString(),
       data.otp.toString(),
     );
+  }
+
+  @skipAuth()
+  @ApiOperation({ summary: 'Resend OTP' })
+  @ApiResponse({
+    status: 200,
+    description: 'OTP sent',
+  })
+  @ApiBadRequestResponse({ description: 'user not found' })
+  @HttpCode(400)
+  @Get('resend-otp/:email')
+  async resendOtp(@Param('email') email: string) {
+    return await this.authService.resendOtp(email.toString());
   }
 
   @skipAuth()
