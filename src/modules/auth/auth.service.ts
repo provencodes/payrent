@@ -415,6 +415,7 @@ export default class AuthenticationService {
             id: user.id,
             email: user.email,
             name: user.name,
+            userType: user.userType,
           },
         },
       };
@@ -434,6 +435,7 @@ export default class AuthenticationService {
       name: user.name,
       sub: user.id,
       email: user.email,
+      userType: user.userType,
     });
   }
 
