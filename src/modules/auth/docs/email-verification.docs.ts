@@ -12,6 +12,7 @@ import {
 } from '@nestjs/swagger';
 import { HttpStatus } from '@nestjs/common';
 import { FAILED_TO_SEND_EMAIL } from '../../../helpers/systemMessages';
+import { ResetPasswordDto } from '../dto/reset-password-dto';
 
 export function ApiVerificationEmailResponsesDoc() {
   return applyDecorators(
@@ -121,15 +122,7 @@ export function changePasswordWithOtp() {
     }),
     ApiBody({
       description: 'The email, otp and new password for resetting the password',
-      examples: {
-        example1: {
-          summary: 'Valid Request',
-          value: {
-            email: 'user@example.com',
-            newPassword: 'StrongP@ssw0rd!',
-          },
-        },
-      },
+      type: ResetPasswordDto,
     }),
     ApiBadRequestResponse({ description: 'invalid otp' }),
   );

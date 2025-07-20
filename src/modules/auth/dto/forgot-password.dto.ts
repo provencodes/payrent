@@ -1,10 +1,10 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsNotEmpty } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsNotEmpty } from 'class-validator';
 
 export class ForgotPasswordDto {
   @ApiProperty({
-    description: "The email address of the user",
-    example: "john@example.com",
+    description: 'The email address of the user',
+    example: 'john@example.com',
   })
   @IsEmail()
   @IsNotEmpty()

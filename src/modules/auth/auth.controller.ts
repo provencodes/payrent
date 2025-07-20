@@ -46,6 +46,7 @@ import {
   changePasswordWithOtp,
 } from './docs/email-verification.docs';
 import { ResetPasswordDto } from './dto/reset-password-dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -134,6 +135,7 @@ export default class RegistrationController {
   }
 
   @ApiOperation({ summary: 'Change password' })
+  @ApiBody({ type: ChangePasswordDto })
   @ApiResponse({
     status: 200,
     description: 'Change users password',
@@ -151,6 +153,7 @@ export default class RegistrationController {
 
   @skipAuth()
   @ApiOperation({ summary: 'Forgot password' })
+  @ApiBody({ type: ForgotPasswordDto })
   @ApiResponse({
     status: 200,
     description: 'Password reset code has been sent to your email',
@@ -159,8 +162,8 @@ export default class RegistrationController {
   @ApiBadRequestResponse({ description: 'invalid email' })
   @HttpCode(400)
   @Post('forgot-password')
-  async resetPassword(@Body() data: { email: string }) {
-    return await this.authService.sendResetPasswordPin(data.email);
+  async resetPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return await this.authService.sendResetPasswordPin(forgotPasswordDto.email);
   }
 
   @skipAuth()
