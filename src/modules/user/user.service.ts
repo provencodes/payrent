@@ -10,7 +10,6 @@ import UserIdentifierOptionsType from './options/UserIdentifierOptions';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CustomHttpException } from '../../helpers/custom-http-filter';
 import * as SYS_MSG from '../../helpers/systemMessages';
-import { CreateUserDTO } from '../auth/dto/create-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 // import { UserInterface } from './interfaces/user.interface';
 
@@ -119,7 +118,6 @@ export default class UserService {
 
   async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
     const { oldPassword, newPassword } = changePasswordDto;
-
     const user = await this.userRepository.findOneBy({ id: userId });
     if (!user || !(await user.validatePassword(oldPassword))) {
       throw new CustomHttpException('Invalid password', HttpStatus.BAD_REQUEST);

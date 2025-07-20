@@ -8,8 +8,6 @@ import {
   ApiBearerAuth,
   ApiBody,
 } from '@nestjs/swagger';
-import UserIdentifierOptionsType from './options/UserIdentifierOptions';
-import { UpdateUserDto } from './dto/update-user-dto';
 import { CreateUserDto } from './dto/create-user.dto';
 
 @ApiBearerAuth()
@@ -44,14 +42,6 @@ export class UsersController {
     @Param('id') id: string,
     @Body() updatePayload: CreateUserDto,
   ) {
-    const identifierOptions = {
-      identifier: id,
-      identifierType: 'id',
-    } as UserIdentifierOptionsType;
-    const payload = {
-      updatePayload,
-      identifierOptions,
-    };
-    return this.userService.updateUserRecord(payload);
+    return await this.userService.updateProfile(id, updatePayload);
   }
 }

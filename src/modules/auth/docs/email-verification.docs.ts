@@ -120,7 +120,7 @@ export function changePasswordWithOtp() {
       description: 'Password reset successful',
     }),
     ApiBody({
-      description: 'The email and new password for resetting the password',
+      description: 'The email, otp and new password for resetting the password',
       examples: {
         example1: {
           summary: 'Valid Request',

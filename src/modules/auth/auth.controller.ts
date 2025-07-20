@@ -143,24 +143,32 @@ export default class RegistrationController {
   @HttpCode(400)
   @Post('change-password/:userId')
   async changePassword(
-    @Param() userId: string,
+    @Param('userId') userId: string,
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
     return this.authService.changePassword(userId, changePasswordDto);
   }
 
   @skipAuth()
-  @ApiOperation({ summary: 'Password reset' })
+  @ApiOperation({ summary: 'Forgot password' })
   @ApiResponse({
     status: 200,
-    description: 'Password reset link has been sent to your email',
+    description: 'Password reset code has been sent to your email',
     type: AuthResponseDto,
   })
   @ApiBadRequestResponse({ description: 'invalid email' })
   @HttpCode(400)
-  @Post('reset-password')
+  @Post('forgot-password')
   async resetPassword(@Body() data: { email: string }) {
     return await this.authService.sendResetPasswordPin(data.email);
+  }
+
+  @skipAuth()
+  @changePasswordWithOtp()
+  @Post('new-password')
+  async newPassword(@Body() newPassworddto: ResetPasswordDto) {
+    const { newPassword, otp, email } = newPassworddto;
+    return await this.authService.resetPassword(email, otp, newPassword);
   }
 
   // @skipAuth()
@@ -214,29 +222,21 @@ export default class RegistrationController {
     return await this.authService.resendOtp(email.toString());
   }
 
-  @skipAuth()
-  @ApiVerificationEmailResponsesDoc()
-  @Get('verify-email/:token')
-  async verifyEmail(@Param() verifyEmailDto: EmailVerificationDto) {
-    const { token } = verifyEmailDto;
-    return await this.authService.verifyEmail(token);
-  }
+  // @skipAuth()
+  // @ApiVerificationEmailResponsesDoc()
+  // @Get('verify-email/:token')
+  // async verifyEmail(@Param() verifyEmailDto: EmailVerificationDto) {
+  //   const { token } = verifyEmailDto;
+  //   return await this.authService.verifyEmail(token);
+  // }
 
-  @skipAuth()
-  @ApiResendVerificationEmailResponsesDoc()
-  @Post('resend-verification-email')
-  async resendVerificationEmail(
-    @Body() resendEmailVerificationDto: ResendEmailVerificationDto,
-  ) {
-    const { email } = resendEmailVerificationDto;
-    return await this.authService.resendVerificationEmail(email);
-  }
-
-  @skipAuth()
-  @changePasswordWithOtp()
-  @Post('new-password')
-  async newPassword(@Body() newPassworddto: ResetPasswordDto) {
-    const { newPassword, email } = newPassworddto;
-    return await this.authService.resetPassword(email, newPassword);
-  }
+  // @skipAuth()
+  // @ApiResendVerificationEmailResponsesDoc()
+  // @Post('resend-verification-email')
+  // async resendVerificationEmail(
+  //   @Body() resendEmailVerificationDto: ResendEmailVerificationDto,
+  // ) {
+  //   const { email } = resendEmailVerificationDto;
+  //   return await this.authService.resendVerificationEmail(email);
+  // }
 }

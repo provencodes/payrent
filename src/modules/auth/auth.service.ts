@@ -618,24 +618,39 @@ export default class AuthenticationService {
     return {
       message: 'OTP verified successfully',
       status_code: HttpStatus.OK,
+      data: {
+        user: {
+          id: findUser.id,
+          email: findUser.email,
+          name: findUser.name,
+        },
+      },
     };
   }
 
-  async resetPassword(email: string, password: string) {
-    const findUser = await this.userService.getUserByParam('email', email);
-    if (!findUser) {
-      throw new CustomHttpException('user not found', HttpStatus.NOT_FOUND);
+  async resetPassword(email: string, otp: string, password: string) {
+    try {
+      // const findUser = await this.userService.getUserByParam('email', email);
+      // if (!findUser) {
+      //   throw new CustomHttpException('user not found', HttpStatus.NOT_FOUND);
+      // }
+      // if (!findUser.isOtpVerified) {
+      //   throw new CustomHttpException('invalid otp', HttpStatus.BAD_REQUEST);
+      // }
+      const verify = await this.verifyOtp(email, otp);
+      if (verify.status_code === HttpStatus.OK) {
+        const { id } = verify.data.user;
+        await this.userService.resetPassword(id, password);
+        await this.userService.resetOtpStatus(id);
+        return {
+          message: SYS_MSG.PASSWORD_RESET_SUCCESSFUL,
+          status_code: HttpStatus.OK,
+          data: verify.data.user,
+        };
+      }
+    } catch (error) {
+      throw new CustomHttpException(error.message, HttpStatus.BAD_REQUEST);
     }
-    if (!findUser.isOtpVerified) {
-      throw new CustomHttpException('invalid otp', HttpStatus.BAD_REQUEST);
-    }
-
-    await this.userService.resetPassword(findUser.id, password);
-    await this.userService.resetOtpStatus(findUser.id);
-    return {
-      message: SYS_MSG.PASSWORD_RESET_SUCCESSFUL,
-      status_code: HttpStatus.OK,
-    };
   }
 
   async decodeToken(token: string) {
