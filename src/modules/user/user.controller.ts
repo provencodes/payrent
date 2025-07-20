@@ -1,35 +1,57 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch } from '@nestjs/common';
 import { User } from './entities/user.entity';
 import UserService from './user.service';
-import { ApiTags, ApiResponse } from '@nestjs/swagger';
-// import { CurrentUser } from '../auth/decorators/current-user.decorator';
-// import { RefreshAuthGuard } from '../auth/guards/refresh-auth.guard';
-// import { AuthService } from '../auth/auth.service';
-// import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import {
+  ApiTags,
+  ApiResponse,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiBody,
+} from '@nestjs/swagger';
+import UserIdentifierOptionsType from './options/UserIdentifierOptions';
+import { UpdateUserDto } from './dto/update-user-dto';
+import { CreateUserDto } from './dto/create-user.dto';
 
+@ApiBearerAuth()
 @ApiTags('User')
 @Controller('users')
 export class UsersController {
   constructor(private readonly userService: UserService) {}
 
-  // @UseGuards(RefreshAuthGuard)
-  // @Post('refresh-token')
-  // async refreshToken(@CurrentUser() user) {
-  //   return this.authService.generateTokens(user.id);
-  // }
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a user by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'User details fetched successfully',
+    type: User,
+  })
+  async findOne(@Param('id') id: string) {
+    return await this.userService.getUser(id);
+  }
 
-  // @UseGuards(JwtAuthGuard)
-  // @Get('profile')
-  // async getProfile(@CurrentUser() user: User) {
-  //   return user;
-  // }
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update user profile' })
+  @ApiBody({
+    description: 'Update user Profile',
+    type: CreateUserDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User profile updated successfully',
+    type: User,
+  })
+  async editProfile(
+    @Param('id') id: string,
+    @Body() updatePayload: CreateUserDto,
+  ) {
+    const identifierOptions = {
+      identifier: id,
+      identifierType: 'id',
+    } as UserIdentifierOptionsType;
+    const payload = {
+      updatePayload,
+      identifierOptions,
+    };
+    return this.userService.updateUserRecord(payload);
+  }
 }

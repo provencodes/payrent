@@ -10,6 +10,8 @@ import UserIdentifierOptionsType from './options/UserIdentifierOptions';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CustomHttpException } from '../../helpers/custom-http-filter';
 import * as SYS_MSG from '../../helpers/systemMessages';
+import { CreateUserDTO } from '../auth/dto/create-user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 // import { UserInterface } from './interfaces/user.interface';
 
 @Injectable()
@@ -26,6 +28,31 @@ export default class UserService {
     return await this.userRepository.save(newUser);
   }
 
+  async getUser(id: string) {
+    const user = await this.getUserRecord({
+      identifier: id,
+      identifierType: 'id',
+    });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...result } = user;
+    return result;
+  }
+
+  async updateProfile(id: string, updatePayload: CreateUserDto) {
+    const identifierOptions = {
+      identifier: id,
+      identifierType: 'id',
+    } as UserIdentifierOptionsType;
+    const payload = {
+      updatePayload,
+      identifierOptions,
+    };
+    const user = await this.updateUserRecord(payload);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...result } = user;
+    return result;
+  }
+
   async createUserWithoutPass(createUserNoPassPayload: CreateUserNoPassOption) {
     const newUser = new User();
     Object.assign(newUser, createUserNoPassPayload);
@@ -36,7 +63,7 @@ export default class UserService {
     const { updatePayload, identifierOptions } = userUpdateOptions;
     const user = await this.getUserRecord(identifierOptions);
     Object.assign(user, updatePayload);
-    await this.userRepository.save(user);
+    return await this.userRepository.save(user);
   }
 
   async getUserByEmail(email: string) {
