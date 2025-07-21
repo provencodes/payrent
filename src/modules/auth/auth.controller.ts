@@ -77,7 +77,6 @@ export default class RegistrationController {
       },
     },
   })
-  @HttpCode(201)
   public async register(@Body() body: CreateUserDTO) {
     return this.authService.createNewUser(body);
   }
@@ -91,7 +90,6 @@ export default class RegistrationController {
     type: LoginResponseDto,
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @HttpCode(200)
   async login(
     @Body() loginDto: LoginDto,
   ): Promise<LoginResponseDto | { status_code: number; message: string }> {
@@ -108,7 +106,6 @@ export default class RegistrationController {
     type: AuthResponseDto,
   })
   @ApiBadRequestResponse({ description: 'Google authentication failed!' })
-  @HttpCode(200)
   async googleAuth(@Body() body: GoogleAuthPayload) {
     return await this.authService.googleAuth(body);
   }
@@ -142,7 +139,6 @@ export default class RegistrationController {
     type: AuthResponseDto,
   })
   @ApiBadRequestResponse({ description: 'Invalid credentials' })
-  @HttpCode(400)
   @Post('change-password/:userId')
   async changePassword(
     @Param('userId') userId: string,
@@ -160,7 +156,6 @@ export default class RegistrationController {
     type: AuthResponseDto,
   })
   @ApiBadRequestResponse({ description: 'invalid email' })
-  @HttpCode(400)
   @Post('forgot-password')
   async resetPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     return await this.authService.sendResetPasswordPin(forgotPasswordDto.email);
@@ -182,7 +177,6 @@ export default class RegistrationController {
   //   type: AuthResponseDto,
   // })
   // @ApiBadRequestResponse({ description: 'invalid OTP' })
-  // @HttpCode(400)
   // @Post('reset-password/:email')
   // async ressetPasswordWithOtp(
   //   @Param('email') email: string,
@@ -203,7 +197,6 @@ export default class RegistrationController {
     type: AuthResponseDto,
   })
   @ApiBadRequestResponse({ description: 'invalid OTP' })
-  @HttpCode(400)
   @Post('verify-otp/:email')
   async verifyOtp(@Param('email') email: string, @Body() data: VerifyOtpDto) {
     return await this.authService.verifyOtp(
@@ -219,7 +212,6 @@ export default class RegistrationController {
     description: 'OTP sent',
   })
   @ApiBadRequestResponse({ description: 'user not found' })
-  @HttpCode(400)
   @Get('resend-otp/:email')
   async resendOtp(@Param('email') email: string) {
     return await this.authService.resendOtp(email.toString());

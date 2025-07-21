@@ -399,7 +399,7 @@ export default class AuthenticationService {
         };
       }
 
-      if (user && !user.isOtpVerified) {
+      if (user && !user.isEmailVerified) {
         return {
           status_code: 400,
           message: 'Complete your verification first',

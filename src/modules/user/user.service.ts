@@ -153,14 +153,17 @@ export default class UserService {
   async updateOtpStatus(userId: string) {
     const findUser = await this.userRepository.findOneBy({ id: userId });
     findUser.isOtpVerified = true;
-    this.userRepository.save(findUser);
+    findUser.isEmailVerified = true;
+    findUser.otp = null;
+    const savedUser = await this.userRepository.save(findUser);
+    return savedUser;
   }
 
   async verifyUser(userId: string) {
     const findUser = await this.userRepository.findOneBy({ id: userId });
     findUser.isEmailVerified = true;
-    findUser.emailVerificationToken = null;
-    findUser.emailVerificationTokenExpires = null;
+    // findUser.emailVerificationToken = null;
+    // findUser.emailVerificationTokenExpires = null;
     this.userRepository.save(findUser);
   }
 
@@ -183,7 +186,7 @@ export default class UserService {
         HttpStatus.NOT_FOUND,
       );
     }
-    user.isOtpVerified = false;
+    // user.isOtpVerified = false;
     user.otp = null;
     user.otpCooldownExpires = null;
 
