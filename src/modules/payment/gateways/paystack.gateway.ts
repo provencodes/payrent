@@ -1,4 +1,3 @@
-// gateways/paystack.gateway.ts
 import { Injectable, HttpException } from '@nestjs/common';
 import axios from 'axios';
 import { PaymentGateway } from './gateway.interface';

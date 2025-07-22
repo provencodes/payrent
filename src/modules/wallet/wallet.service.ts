@@ -44,6 +44,9 @@ export class WalletService {
     const wallet = await this.walletRepository.findOne({ where: { userId } });
     if (!wallet) throw new NotFoundException('Wallet not found');
 
+    // TODO Take the money from the user!
+    
+
     wallet.balance = Number(wallet.balance) + Number(amount);
     return await this.walletRepository.save(wallet);
   }

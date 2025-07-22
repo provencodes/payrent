@@ -23,7 +23,7 @@ export class FundWalletDto {
     example: 'd3f7a939-4fc0-4a1e-9a0b-92b748c63e2a',
     description: 'User ID of the wallet owner',
   })
-  @IsNumber()
+  @IsString()
   userId: string;
 }
 

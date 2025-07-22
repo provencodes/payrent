@@ -11,6 +11,7 @@ import { LegalService } from './legal.service';
 import { CreateLegalDto } from './dto/create-legal.dto';
 import { UpdateLegalDto } from './dto/update-legal.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
+
 @ApiBearerAuth()
 @Controller('legal')
 export class LegalController {
