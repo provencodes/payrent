@@ -10,6 +10,7 @@ import { DataSource } from 'typeorm';
 import { AppModule } from './app.module';
 import { initializeDataSource } from './database/datasource';
 import { ResponseInterceptor } from './shared/interceptors/response.interceptor';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -44,6 +45,12 @@ async function bootstrap() {
     },
   );
 
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+    }),
+  );
   app.enable('trust proxy');
   app.set('trust proxy', true);
 

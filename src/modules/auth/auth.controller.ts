@@ -104,7 +104,7 @@ export default class RegistrationController {
     type: AuthResponseDto,
   })
   @ApiBadRequestResponse({ description: 'Google authentication failed!' })
-  async googleAuth(@Body() body: GoogleAuthPayload) {
+  async googleAuth(@Body() body: GoogleAuthPayloadDto) {
     return await this.authService.googleAuth(body);
   }
 
@@ -112,6 +112,7 @@ export default class RegistrationController {
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   googleAuthRedirect(@Req() req) {
+    console.log(req.user);
     return req.user;
   }
 

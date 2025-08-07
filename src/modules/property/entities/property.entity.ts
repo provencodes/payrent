@@ -178,28 +178,3 @@ export class Property {
   @UpdateDateColumn()
   updatedAt: Date;
 }
-
-// to avoid jsonb
-// @Entity()
-// export class Image {
-//   @PrimaryGeneratedColumn()
-//   id: number;
-
-//   @Column()
-//   url: string;
-
-//   @Column()
-//   public_id: string;
-
-//   @ManyToOne(() => Property, property => property.images, { onDelete: 'CASCADE' })
-//   property: Property;
-// }
-
-// @Entity()
-// export class Property {
-//   @PrimaryGeneratedColumn()
-//   id: number;
-
-//   @OneToMany(() => Image, image => image.property, { cascade: true, eager: true })
-//   images: Image[];
-// }

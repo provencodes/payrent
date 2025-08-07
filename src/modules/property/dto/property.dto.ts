@@ -7,14 +7,26 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+// import { PaymentType } from './create-property.dto';
+import { ListingType } from './create-property.dto';
+import { PropertyStatus } from './create-property.dto';
 
 export class GetPropertiesDto {
-  @ApiPropertyOptional() @IsOptional() @IsString() listedBy?: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  listedBy?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() owner?: string;
   @ApiPropertyOptional() @IsOptional() @IsBoolean() approved?: boolean;
   @ApiPropertyOptional() @IsOptional() @IsString() renovationType?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() constructionStatus?: string;
-  @ApiPropertyOptional() @IsOptional() @IsString() status?: string;
+  @ApiPropertyOptional({
+    enum: PropertyStatus,
+    example: PropertyStatus.APPROVED,
+  })
+  @IsOptional()
+  @IsEnum(PropertyStatus)
+  status?: string;
   @ApiPropertyOptional()
   @IsOptional()
   @Type(() => Number)
@@ -23,7 +35,13 @@ export class GetPropertiesDto {
   @ApiPropertyOptional() @IsOptional() @Type(() => Number) rentalPrice?: number;
   @ApiPropertyOptional() @IsOptional() @IsString() floorLevel?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() address?: string;
-  @ApiPropertyOptional() @IsOptional() @IsString() listingType?: string;
+  @ApiPropertyOptional({
+    enum: ListingType,
+    example: ListingType.RENT,
+  })
+  @IsEnum(ListingType)
+  @IsOptional()
+  listingType?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() type?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() title?: string;
 

@@ -1,9 +1,9 @@
 export default interface FacebookAuthPayload {
-    email: string;
+  email: string;
 
-    first_name: string;
+  first_name: string;
 
-    last_name: string;
+  last_name: string;
 
-    full_name: string;
+  full_name: string;
 }

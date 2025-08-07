@@ -1,63 +1,90 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { UserType } from '../../user/entities/user.entity';
+import { IsOptional, IsString } from 'class-validator';
 
 export class GoogleAuthPayloadDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Access token provided by Google',
     example: 'ya29.a0AfH6SMBb4JG...',
   })
-  access_token: string;
+  @IsString()
+  @IsOptional()
+  access_token?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Expiration time in seconds for the access token',
     example: 3599,
   })
-  expires_in: number;
+  @IsOptional()
+  expires_in?: number;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Refresh token provided by Google',
     example: '1//09gJ...',
   })
-  refresh_token: string;
+  @IsString()
+  @IsOptional()
+  refresh_token?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Scope of the access token',
     example: 'https://www.googleapis.com/auth/userinfo.profile',
   })
-  scope: string;
+  @IsString()
+  @IsOptional()
+  scope?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Type of the token provided',
     example: 'Bearer',
   })
-  token_type: string;
+  @IsString()
+  @IsOptional()
+  token_type?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'ID token provided by Google',
     example: 'eyJhbGciOiJSUzI1NiIs...',
   })
-  id_token: string;
+  @IsString()
+  @IsOptional()
+  id_token?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Expiration time in epoch format',
     example: 1629716100,
   })
-  expires_at: number;
+  @IsOptional()
+  expires_at?: number;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Provider of the authentication service',
     example: 'google',
   })
-  provider: string;
+  @IsString()
+  @IsOptional()
+  provider?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Type of the authentication',
     example: 'oauth',
   })
-  type: string;
+  @IsString()
+  @IsOptional()
+  type?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Provider account ID',
     example: '1234567890',
   })
-  providerAccountId: string;
+  @IsString()
+  @IsOptional()
+  providerAccountId?: string;
+
+  @ApiPropertyOptional({
+    description: 'User account Type',
+    example: UserType.TENANT,
+  })
+  @IsOptional()
+  userType?: UserType;
 }

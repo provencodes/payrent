@@ -33,9 +33,7 @@ import {
   PropertyResponseDto,
 } from './dto/property-response.dto';
 import { GetPropertiesDto } from './dto/property.dto';
-// import { skipAuth } from 'src/helpers/skipAuth';
 
-// @skipAuth()
 @ApiBearerAuth()
 @ApiTags('Properties')
 @Controller('properties')
@@ -47,15 +45,8 @@ export class PropertyController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new property listing' })
-  // @UseInterceptors(
-  //   FilesInterceptor('images', 5, {
-  //     ...multerOptions,
-  //     fileFilter,
-  //   }),
-  // )
-  // @ApiConsumes('multipart/form-data')
   @ApiBody({
-    description: 'Create property with images',
+    description: 'Create property with all details',
     type: CreatePropertyDto,
   })
   @ApiResponse({
@@ -67,7 +58,7 @@ export class PropertyController {
     @Body() createPropertyDto: CreatePropertyDto,
     @Request() req,
   ): Promise<PropertyResponseDto> {
-    return this.propertyService.create(createPropertyDto, req.user.id);
+    return this.propertyService.create(createPropertyDto, req.user.sub);
   }
 
   @Get()

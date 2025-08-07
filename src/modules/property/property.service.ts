@@ -11,7 +11,7 @@ import { UpdatePropertyDto } from './dto/update-property.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { GetAllPropertyDto } from './dto/property-response.dto';
 import { GetPropertiesDto } from './dto/property.dto';
-
+import { ListingType } from './dto/create-property.dto';
 @Injectable()
 export class PropertyService {
   constructor(
@@ -20,24 +20,24 @@ export class PropertyService {
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
-  async create(dto: CreatePropertyDto, userId) {
-    console.log(userId);
-    if (dto.listingType === 'shares' && !dto.pricePerShare) {
+  async create(dto: CreatePropertyDto, userId: string) {
+    if (dto.listingType === ListingType.SHARES && !dto.pricePerShare) {
       throw new NotFoundException(
         'Price per share is required for shares listing',
       );
-    } else if (dto.listingType === 'rent' && !dto.rentalPrice) {
+    } else if (dto.listingType === ListingType.RENT && !dto.rentalPrice) {
       throw new NotFoundException('Rental price is required for rent listing');
     } else if (
-      (dto.listingType === 'sale' && !dto.price) ||
-      (dto.listingType === 'sale' && !(dto.numberOfUnit && dto.pricePerUnit))
+      (dto.listingType === ListingType.SALE && !dto.price) ||
+      (dto.listingType === ListingType.SALE &&
+        !(dto.numberOfUnit && dto.pricePerUnit))
     ) {
       throw new NotFoundException(
         'Price is required for sale listing or price per unit and total numebr of units',
       );
     }
     if (
-      dto.listingType === 'joint-ventures' &&
+      dto.listingType === ListingType.JOINT_VENTURE &&
       !(dto.renovationType || dto.estimatedTimeline || dto.paymentType)
     ) {
       throw new BadRequestException(
@@ -45,7 +45,7 @@ export class PropertyService {
       );
     }
     if (
-      dto.listingType === 'flip' &&
+      dto.listingType === ListingType.FLIP &&
       !(dto.price || dto.resaleValue || dto.potentialRoi)
     ) {
       throw new BadRequestException(
@@ -54,7 +54,7 @@ export class PropertyService {
     }
 
     if (
-      dto.listingType === 'co-vest' &&
+      dto.listingType === ListingType.CO_VEST &&
       !(
         dto.price ||
         dto.investmentDuration ||
@@ -201,9 +201,8 @@ export class PropertyService {
     const [items, total] = await qb.getManyAndCount();
 
     return {
-      Status: 200,
-      Message: 'Properties fetched successfully',
-      Data: {
+      message: 'Properties fetched successfully',
+      data: {
         items,
         meta: {
           total,
@@ -214,63 +213,4 @@ export class PropertyService {
       },
     };
   }
-
-  // async getAllProperties(query: GetPropertiesDto) {
-  //   const {
-  //     page = 1,
-  //     limit = 10,
-  //     orderBy = 'createdAt',
-  //     order = 'desc',
-  //     ...filters
-  //   } = query;
-
-  //   const qb = this.propertyRepository.createQueryBuilder('property');
-
-  //   // Apply filters
-  //   Object.entries(filters).forEach(([key, value]) => {
-  //     if (value !== undefined && value !== null) {
-  //       qb.andWhere(`property.${key} = :${key}`, { [key]: value });
-  //     }
-  //   });
-
-  //   // Pagination
-  //   qb.skip((page - 1) * limit).take(limit);
-
-  //   // Sorting
-  //   qb.orderBy(`property.${orderBy}`, order.toUpperCase() as 'ASC' | 'DESC');
-
-  //   const [items, total] = await qb.getManyAndCount();
-
-  //   return {
-  //     Status: 200,
-  //     Message: 'Properties fetched successfully',
-  //     Data: {
-  //       items,
-  //       meta: {
-  //         total,
-  //         page,
-  //         limit,
-  //         totalPages: Math.ceil(total / limit),
-  //       },
-  //     },
-  //   };
-  // }
-
-  // async remove(id: string) {
-  //   const property = await this.propertyRepo.findOne({ where: { id } });
-  //   if (!property) throw new NotFoundException('Property not found');
-
-  //   // Delete images from cloudinary
-  //   const publicIds = property.images?.map((img) => img.public_id);
-  //   if (publicIds?.length) {
-  //     await this.cloudinaryService.deleteMultipleImages(publicIds);
-  //   }
-
-  //   await this.propertyRepo.remove(property);
-
-  //   return {
-  //     Status: 200,
-  //     Message: 'Property deleted successfully',
-  //   };
-  // }
 }

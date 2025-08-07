@@ -30,6 +30,7 @@ import * as SYS_MSG from '../../helpers/systemMessages';
 import { generateUsername } from 'unique-username-generator';
 import UserResponseDTO from '../user/dto/user-response.dto';
 import { WalletService } from '../wallet/wallet.service';
+import { GoogleAuthPayloadDto } from './dto/google-auth.dto';
 
 @Injectable()
 export default class AuthenticationService {
@@ -235,7 +236,7 @@ export default class AuthenticationService {
     return userName;
   }
 
-  async googleAuth(googleAuthPayload: GoogleAuthPayload) {
+  async googleAuth(googleAuthPayload: GoogleAuthPayloadDto) {
     const idToken = googleAuthPayload.id_token;
     const verificationRequest = await fetch(
       `https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${idToken}`,
@@ -263,40 +264,48 @@ export default class AuthenticationService {
         verifyTokenResponse.name;
       const userName = await this.generateUniqueUsername(userNamePayload);
 
-      const directoryPath = path.join(__dirname, '../../../..', 'avatars');
+      // const directoryPath = path.join(__dirname, '../../../..', 'avatars');
       // const avatars = [];
-      const files = fs.readdirSync(directoryPath);
+      // const files = fs.readdirSync(directoryPath);
+
+      const currentTime = new Date();
+      const otp = await this.generateOtp();
+      const hashedOtp = await this.hashOtp(otp);
+      const otpCooldownExpires = new Date(
+        currentTime.getTime() + 1 * 60 * 1000,
+      );
+
       const userCreationPayload = {
         email: userEmail,
         name: userName,
         password: '',
-        avatar: files[0],
+        userType: googleAuthPayload?.userType,
       };
-
-      const accessToken = this.jwtService.sign({
-        email: userEmail,
-        username: userName,
-      });
 
       const sendMailDto = {
         to: userEmail,
         subject: 'Email Verification',
         template: 'email-verification',
         context: {
-          username: userName,
+          name: userName,
           verifyEmailIllustration: 'https://i.ibb.co/wLNf8sx/image.png',
-          verificationUrl: new URL(
-            `${process.env.CLIENT_BASE_URL}/${accessToken}`,
-          ).href,
+          otp,
         },
       };
       await this.emailService.sendEMail(sendMailDto);
+
       const createdUser = await this.userService.createUser(
         Object.assign(userCreationPayload, {
-          emailVerificationToken: accessToken,
-          emailVerificationTokenExpires: addMinutes(new Date(), 15),
+          otp: hashedOtp,
+          otpCooldownExpires,
         }),
       );
+
+      const accessToken = this.jwtService.sign({
+        sub: createdUser.id,
+        email: userEmail,
+        name: userName,
+      });
 
       return {
         message:
@@ -435,7 +444,7 @@ export default class AuthenticationService {
       name: user.name,
       sub: user.id,
       email: user.email,
-      userType: user.userType,
+      userType: user?.userType,
     });
   }
 
@@ -463,6 +472,13 @@ export default class AuthenticationService {
       const userNamePayload = first_name || last_name || full_name;
       const userName = await this.generateUniqueUsername(userNamePayload);
 
+      const currentTime = new Date();
+      const otp = await this.generateOtp();
+      const hashedOtp = await this.hashOtp(otp);
+      const otpCooldownExpires = new Date(
+        currentTime.getTime() + 1 * 60 * 1000,
+      );
+
       const userCreationPayload = {
         email: userEmail,
         name: userName,
@@ -475,20 +491,18 @@ export default class AuthenticationService {
       const sendMailDto = {
         to: userEmail,
         subject: 'Email Verification',
-        template: 'otp-verification',
+        template: 'email-verification',
         context: {
-          username: userName,
+          name: userName,
           verifyEmailIllustration: 'https://i.ibb.co/wLNf8sx/image.png',
-          verificationUrl: new URL(
-            `${process.env.CLIENT_BASE_URL}/${accessToken}`,
-          ).href,
+          otp,
         },
       };
       await this.emailService.sendEMail(sendMailDto);
       const createdUser = await this.userService.createUser(
         Object.assign(userCreationPayload, {
-          emailVerificationToken: accessToken,
-          emailVerificationTokenExpires: addMinutes(new Date(), 15),
+          otp: hashedOtp,
+          otpCooldownExpires,
         }),
       );
 
