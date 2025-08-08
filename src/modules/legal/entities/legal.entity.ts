@@ -32,10 +32,13 @@ export class Legal {
   caseStatus: string;
 
   @Column()
-  legalPackageType: string;
+  legalPackageType?: string;
 
   @Column({ nullable: false, default: false })
   approved: boolean;
+
+  @Column({ nullable: false, default: false })
+  isPaid: boolean;
 
   @CreateDateColumn()
   createdAt: Date;

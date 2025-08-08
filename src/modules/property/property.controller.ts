@@ -73,6 +73,12 @@ export class PropertyController {
     return this.propertyService.findAll();
   }
 
+  @Get('metrics')
+  async getMetrics(@Request() req) {
+    console.log('here');
+    return this.propertyService.getMetrics(req.user.sub);
+  }
+
   @Get('filter')
   async getAll(@Query() query: GetPropertiesDto) {
     return this.propertyService.getAllProperties(query);
@@ -129,7 +135,6 @@ export class PropertyController {
       ...(newImages.length > 0 && { images: newImages }),
     });
   }
-  // return this.propertyService.update(id, updatePropertyDto);
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)

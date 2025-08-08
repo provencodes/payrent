@@ -5,9 +5,9 @@ import {
   ValidateNested,
   IsOptional,
   IsBoolean,
+  IsEnum,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 class FileObject {
@@ -18,6 +18,13 @@ class FileObject {
   @ApiProperty()
   @IsString()
   public_id: string;
+}
+
+export enum CaseStatus {
+  IN_PROGRESS = 'in-progress',
+  RESOLVED = 'resolved',
+  CANCELLED = 'cancelled',
+  UNDER_REVIEW = 'under-review',
 }
 
 export class CreateLegalDto {
@@ -43,13 +50,14 @@ export class CreateLegalDto {
   @IsString()
   legalIssue: string;
 
-  @ApiProperty({ example: 'Basic' })
+  @ApiPropertyOptional({ example: 'Basic' })
+  @IsOptional()
   @IsString()
-  legalPackageType: string;
+  legalPackageType?: string;
 
-  @ApiProperty({ example: 'Ongoing' })
-  @IsString()
-  caseStatus: string;
+  @ApiProperty({ enum: CaseStatus, example: CaseStatus.IN_PROGRESS })
+  @IsEnum(CaseStatus)
+  caseStatus: CaseStatus;
 
   @ApiPropertyOptional({ example: false })
   @IsOptional()

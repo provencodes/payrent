@@ -213,4 +213,65 @@ export class PropertyService {
       },
     };
   }
+
+  async getMetrics(userId: string) {
+    const qb = this.propertyRepository.createQueryBuilder('property');
+
+    // const totalProperties = await qb
+    //   .clone()
+    //   .where('property.listedBy = :userId', { userId })
+    //   .getCount();
+
+    // const soldProperties = await qb
+    //   .clone()
+    //   .where('property.listedBy = :userId', { userId })
+    //   .andWhere('property.owner IS NOT NULL')
+    //   .getCount();
+
+    // const rentedProperties = await qb
+    //   .clone()
+    //   .where('property.listedBy = :userId', { userId })
+    //   .andWhere('property.rented = :rented', { rented: true })
+    //   .getCount();
+
+    // const vacantProperties = await qb
+    //   .clone()
+    //   .where('property.listedBy = :userId', { userId })
+    //   .andWhere('property.rented = false')
+    //   .getCount();
+
+    const [
+      totalProperties,
+      soldProperties,
+      rentedProperties,
+      vacantProperties,
+    ] = await Promise.all([
+      qb.clone().where('property.listedBy = :userId', { userId }).getCount(),
+      qb
+        .clone()
+        .where('property.listedBy = :userId', { userId })
+        .andWhere('property.owner IS NOT NULL')
+        .getCount(),
+      qb
+        .clone()
+        .where('property.listedBy = :userId', { userId })
+        .andWhere('property.rented = :rented', { rented: true })
+        .getCount(),
+      qb
+        .clone()
+        .where('property.listedBy = :userId', { userId })
+        .andWhere('property.rented = :rented', { rented: false })
+        .getCount(),
+    ]);
+
+    return {
+      message: 'Properties fetched successfully',
+      data: {
+        totalProperties,
+        soldProperties,
+        rentedProperties,
+        vacantProperties,
+      },
+    };
+  }
 }
