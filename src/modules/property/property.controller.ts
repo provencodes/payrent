@@ -75,7 +75,6 @@ export class PropertyController {
 
   @Get('metrics')
   async getMetrics(@Request() req) {
-    console.log('here');
     return this.propertyService.getMetrics(req.user.sub);
   }
 

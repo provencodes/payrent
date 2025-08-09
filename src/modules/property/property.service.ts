@@ -220,16 +220,25 @@ export class PropertyService {
       qb
         .clone()
         .where('property.listedBy = :userId', { userId })
+        .andWhere('property.listingType = :listingType', {
+          listingType: 'sale',
+        })
         .andWhere('property.owner IS NOT NULL')
         .getCount(),
       qb
         .clone()
         .where('property.listedBy = :userId', { userId })
+        .andWhere('property.listingType = :listingType', {
+          listingType: 'rent',
+        })
         .andWhere('property.rented = :rented', { rented: true })
         .getCount(),
       qb
         .clone()
         .where('property.listedBy = :userId', { userId })
+        .andWhere('property.listingType = :listingType', {
+          listingType: 'rent',
+        })
         .andWhere('property.rented = :rented', { rented: false })
         .getCount(),
     ]);
