@@ -11,6 +11,14 @@ class FileObject {
   public_id: string;
 }
 
+/*
+select property
+renovationType
+timeline
+image
+paymentPlan enum[one-time, reccuring]
+*/
+
 @Entity('properties')
 export class Property {
   @PrimaryGeneratedColumn('uuid')

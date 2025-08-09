@@ -27,33 +27,27 @@ export class PropertyService {
       );
     } else if (dto.listingType === ListingType.RENT && !dto.rentalPrice) {
       throw new NotFoundException('Rental price is required for rent listing');
+    } else if (dto.listingType === ListingType.SALE) {
+      if (!dto.price && !(dto.numberOfUnit && dto.pricePerUnit)) {
+        throw new NotFoundException(
+          'Price is required for sale listing, or price per unit and total number of units',
+        );
+      }
     } else if (
-      (dto.listingType === ListingType.SALE && !dto.price) ||
-      (dto.listingType === ListingType.SALE &&
-        !(dto.numberOfUnit && dto.pricePerUnit))
-    ) {
-      throw new NotFoundException(
-        'Price is required for sale listing or price per unit and total numebr of units',
-      );
-    }
-    if (
       dto.listingType === ListingType.JOINT_VENTURE &&
       !(dto.renovationType || dto.estimatedTimeline || dto.paymentType)
     ) {
       throw new BadRequestException(
         'Renovation type, estimated timeline, and payment type are required for joint ventures listing',
       );
-    }
-    if (
+    } else if (
       dto.listingType === ListingType.FLIP &&
       !(dto.price || dto.resaleValue || dto.potentialRoi)
     ) {
       throw new BadRequestException(
         'price, resale value, potential ROI are required for flip listing',
       );
-    }
-
-    if (
+    } else if (
       dto.listingType === ListingType.CO_VEST &&
       !(
         dto.price ||
@@ -67,7 +61,6 @@ export class PropertyService {
         'price, investment duration, potential ROI, investment goal, minimum investment are required for co-vest listing',
       );
     }
-    // dto.listedBy = userId;
     const payload = { listedBy: userId, ...dto };
     const property = this.propertyRepository.create(payload);
     const savedProp = await this.propertyRepository.save(property);
