@@ -19,6 +19,9 @@ export class Legal {
   @Column()
   propertyId: string;
 
+  @Column()
+  propertyTitle: string;
+
   @Column({ type: 'jsonb', nullable: true })
   supportingDocument: FileObject[];
 
@@ -26,7 +29,10 @@ export class Legal {
   preferredLegalAction: string;
 
   @Column()
-  legalIssue: string;
+  type: string;
+
+  @Column()
+  description: string;
 
   @Column()
   caseStatus: string;

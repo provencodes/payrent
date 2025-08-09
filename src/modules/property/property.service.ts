@@ -217,29 +217,6 @@ export class PropertyService {
   async getMetrics(userId: string) {
     const qb = this.propertyRepository.createQueryBuilder('property');
 
-    // const totalProperties = await qb
-    //   .clone()
-    //   .where('property.listedBy = :userId', { userId })
-    //   .getCount();
-
-    // const soldProperties = await qb
-    //   .clone()
-    //   .where('property.listedBy = :userId', { userId })
-    //   .andWhere('property.owner IS NOT NULL')
-    //   .getCount();
-
-    // const rentedProperties = await qb
-    //   .clone()
-    //   .where('property.listedBy = :userId', { userId })
-    //   .andWhere('property.rented = :rented', { rented: true })
-    //   .getCount();
-
-    // const vacantProperties = await qb
-    //   .clone()
-    //   .where('property.listedBy = :userId', { userId })
-    //   .andWhere('property.rented = false')
-    //   .getCount();
-
     const [
       totalProperties,
       soldProperties,

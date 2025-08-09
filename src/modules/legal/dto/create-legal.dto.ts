@@ -35,6 +35,11 @@ export class CreateLegalDto {
   @IsUUID('4', { message: 'propertyId must be a valid UUID' })
   propertyId: string;
 
+  @ApiProperty({ example: 'Duplex in Lekki' })
+  @IsOptional()
+  @IsString()
+  propertyTitle: string;
+
   @ApiPropertyOptional({ type: [FileObject] })
   @IsOptional()
   @IsArray()
@@ -48,7 +53,14 @@ export class CreateLegalDto {
 
   @ApiProperty({ example: 'Tenant refused to pay' })
   @IsString()
-  legalIssue: string;
+  type: string;
+
+  @ApiProperty({
+    example:
+      'A new tenant that just packed in refused to pay her rent and it is getting out of hand',
+  })
+  @IsString()
+  description: string;
 
   @ApiPropertyOptional({ example: 'Basic' })
   @IsOptional()

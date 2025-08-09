@@ -41,18 +41,33 @@ export class LegalService {
   }
 
   async update(id: string, updateLegalDto: UpdateLegalDto) {
-    const legal = await this.findOne(id);
-    const updated = Object.assign(legal, updateLegalDto);
-    const savedLegal = this.legalRepo.save(updated);
+    const legal = await this.legalRepo.preload({
+      id,
+      ...updateLegalDto,
+    });
+
+    if (!legal) {
+      throw new NotFoundException(`Legal entry with ID ${id} not found`);
+    }
+
+    await this.legalRepo.save(legal);
+
+    const updatedLegal = await this.legalRepo.findOne({
+      where: { id },
+    });
+
     return {
       message: 'Legal entry updated successfully',
-      data: savedLegal,
+      data: updatedLegal,
     };
   }
 
   async remove(id: string) {
     const legal = await this.findOne(id);
+    if (!legal) {
+      throw new NotFoundException(`Legal entry with ID ${id} not found`);
+    }
     await this.legalRepo.remove(legal.data);
-    return `This action removes a #${id} legal`;
+    return { message: `Legal entry with ID #${id} successfully deleted.` };
   }
 }
