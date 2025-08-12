@@ -95,8 +95,9 @@ export class PropertyService {
   }
 
   async renovationRequest(dto: RenovationRequestDto): Promise<Property> {
-    const property = await this.findOne(dto.propertyId);
-    const newDto = { ...dto, listingType: ListingType.JOINT_VENTURE };
+    const { propertyId, ...mainDto } = dto;
+    const property = await this.findOne(propertyId);
+    const newDto = { mainDto, listingType: ListingType.JOINT_VENTURE };
     const updated = Object.assign(property, newDto);
     return await this.propertyRepository.save(updated);
   }

@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsArray,
   IsEnum,
+  IsNotEmpty,
   IsOptional,
   IsString,
   ValidateNested,
@@ -10,7 +11,7 @@ import { FileObject, PaymentType } from './create-property.dto';
 import { Type } from 'class-transformer';
 
 export class RenovationRequestDto {
-  @ApiProperty({ example: 'Luxury Apartment in Lekki' })
+  @ApiPropertyOptional({ example: '407556c4-d547-4dbe-9d61-8bf570e57f9a' })
   @IsString()
   propertyId: string;
 

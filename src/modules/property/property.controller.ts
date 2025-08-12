@@ -95,6 +95,19 @@ export class PropertyController {
     return this.propertyService.findOne(id);
   }
 
+  @Patch('renovation-request')
+  @ApiOperation({ summary: 'Make a renovation request' })
+  @ApiBody({
+    description: 'Update property to joint ventures',
+    type: RenovationRequestDto,
+  })
+  @ApiResponse({ status: 200, description: 'Property updated', type: Property })
+  async jointVentureRequest(
+    @Body() renovationRequestDto: RenovationRequestDto,
+  ): Promise<Property> {
+    return this.propertyService.renovationRequest(renovationRequestDto);
+  }
+
   @Patch(':id')
   @ApiOperation({ summary: 'Update a property' })
   // @UseInterceptors(
@@ -133,19 +146,6 @@ export class PropertyController {
     return this.propertyService.update(id, {
       ...updatePropertyDto,
     });
-  }
-
-  @Patch('renovation-request')
-  @ApiOperation({ summary: 'Make a renovation request' })
-  @ApiBody({
-    description: 'Update property to joint ventures',
-    type: RenovationRequestDto,
-  })
-  @ApiResponse({ status: 200, description: 'Property updated', type: Property })
-  async jointVentureRequest(
-    @Body() renovationRequestDto: RenovationRequestDto,
-  ): Promise<Property> {
-    return this.propertyService.renovationRequest(renovationRequestDto);
   }
 
   @Delete(':id')
