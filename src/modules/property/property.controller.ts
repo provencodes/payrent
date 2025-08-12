@@ -8,8 +8,8 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
-  UseInterceptors,
-  UploadedFiles,
+  // UseInterceptors,
+  // UploadedFiles,
   Query,
   Request,
 } from '@nestjs/common';
@@ -20,19 +20,20 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  ApiConsumes,
+  // ApiConsumes,
   ApiBody,
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { Property } from './entities/property.entity';
-import { FilesInterceptor } from '@nestjs/platform-express';
+// import { FilesInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { fileFilter, multerOptions } from '../../utils/multer.config';
+// import { fileFilter, multerOptions } from '../../utils/multer.config';
 import {
   GetAllPropertyDto,
   PropertyResponseDto,
 } from './dto/property-response.dto';
 import { GetPropertiesDto } from './dto/property.dto';
+import { RenovationRequestDto } from './dto/renovation-request.dto';
 
 @ApiBearerAuth()
 @ApiTags('Properties')
@@ -96,13 +97,13 @@ export class PropertyController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a property' })
-  @UseInterceptors(
-    FilesInterceptor('images', 5, {
-      ...multerOptions,
-      fileFilter,
-    }),
-  )
-  @ApiConsumes('multipart/form-data')
+  // @UseInterceptors(
+  //   FilesInterceptor('images', 5, {
+  //     ...multerOptions,
+  //     fileFilter,
+  //   }),
+  // )
+  // @ApiConsumes('multipart/form-data')
   @ApiBody({
     description: 'Update property with optional new images',
     type: UpdatePropertyDto,
@@ -110,29 +111,41 @@ export class PropertyController {
   @ApiResponse({ status: 200, description: 'Property updated', type: Property })
   async update(
     @Param('id') id: string,
-    @UploadedFiles() files: Express.Multer.File[],
+    // @UploadedFiles() files: Express.Multer.File[],
     @Body() updatePropertyDto: UpdatePropertyDto,
   ): Promise<Property> {
-    let newImages = [];
-    if (files && files.length > 0) {
-      // Optionally delete old images
-      // const existing = await this.propertyService.findOne(id);
-      // const publicIds = existing.images?.map((i) => i.public_id) || [];
-      // if (publicIds.length) {
-      //   await this.cloudinaryService.deleteMultipleImages(publicIds);
-      // }
+    // let newImages = [];
+    // if (files && files.length > 0) {
+    //   // Optionally delete old images
+    //   // const existing = await this.propertyService.findOne(id);
+    //   // const publicIds = existing.images?.map((i) => i.public_id) || [];
+    //   // if (publicIds.length) {
+    //   //   await this.cloudinaryService.deleteMultipleImages(publicIds);
+    //   // }
 
-      const uploads = await this.cloudinaryService.uploadMultipleImages(files);
-      newImages = uploads.map((u) => ({
-        url: u.secure_url,
-        public_id: u.public_id,
-      }));
-    }
+    //   const uploads = await this.cloudinaryService.uploadMultipleImages(files);
+    //   newImages = uploads.map((u) => ({
+    //     url: u.secure_url,
+    //     public_id: u.public_id,
+    //   }));
+    // }
 
     return this.propertyService.update(id, {
       ...updatePropertyDto,
-      ...(newImages.length > 0 && { images: newImages }),
     });
+  }
+
+  @Patch('renovation-request')
+  @ApiOperation({ summary: 'Make a renovation request' })
+  @ApiBody({
+    description: 'Update property to joint ventures',
+    type: RenovationRequestDto,
+  })
+  @ApiResponse({ status: 200, description: 'Property updated', type: Property })
+  async jointVentureRequest(
+    @Body() renovationRequestDto: RenovationRequestDto,
+  ): Promise<Property> {
+    return this.propertyService.renovationRequest(renovationRequestDto);
   }
 
   @Delete(':id')

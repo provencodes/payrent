@@ -10,7 +10,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-class FileObject {
+export class FileObject {
   @ApiProperty()
   @IsString()
   url: string;

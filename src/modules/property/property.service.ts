@@ -12,6 +12,7 @@ import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { GetAllPropertyDto } from './dto/property-response.dto';
 import { GetPropertiesDto } from './dto/property.dto';
 import { ListingType } from './dto/create-property.dto';
+import { RenovationRequestDto } from './dto/renovation-request.dto';
 @Injectable()
 export class PropertyService {
   constructor(
@@ -90,6 +91,13 @@ export class PropertyService {
   ): Promise<Property> {
     const property = await this.findOne(id);
     const updated = Object.assign(property, updatePropertyDto);
+    return await this.propertyRepository.save(updated);
+  }
+
+  async renovationRequest(dto: RenovationRequestDto): Promise<Property> {
+    const property = await this.findOne(dto.propertyId);
+    const newDto = { ...dto, listingType: ListingType.JOINT_VENTURE };
+    const updated = Object.assign(property, newDto);
     return await this.propertyRepository.save(updated);
   }
 
