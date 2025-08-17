@@ -46,6 +46,12 @@ export enum PropertyStatus {
 }
 
 export class CreatePropertyDto {
+  /*
+negotiable boolean
+minimumDepositForInstallment: number
+legalAndAdministrativeFee: number
+agentCommission: number
+  */
   @ApiProperty({ example: 'Luxury Apartment in Lekki' })
   @IsString()
   title: string;
