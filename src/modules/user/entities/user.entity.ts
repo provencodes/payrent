@@ -8,7 +8,7 @@ import { Wallet } from '../../wallet/entities/wallet.entity';
 export enum UserType {
   LANDLORD = 'landlord',
   TENANT = 'tenant',
-  MANAGER = 'mananger',
+  MANAGER = 'manager',
   ADMIN = 'admin',
 }
 
