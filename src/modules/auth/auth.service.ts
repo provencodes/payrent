@@ -1,8 +1,8 @@
 import { ForbiddenException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import * as path from 'path';
-import * as fs from 'fs';
+// import * as path from 'path';
+// import * as fs from 'fs';
 import { TokenPayload } from 'google-auth-library';
 import authConfig from '../../../config/auth.config';
 import { CustomHttpException } from '../../helpers/custom-http-filter';
@@ -14,7 +14,7 @@ import UserService from '../user/user.service';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { LoginDto } from './dto/login.dto';
-import GoogleAuthPayload from './interfaces/GoogleAuthPayloadInterface';
+// import GoogleAuthPayload from './interfaces/GoogleAuthPayloadInterface';
 import { SendMailDto } from '../mailer/dto/send-mail.dto';
 import { EmailService } from '../mailer/mailer.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -148,7 +148,7 @@ export default class AuthenticationService {
             id: user.id,
             email: user.email,
             name: user.name,
-            pic: user?.profilePicture,
+            profilePicture: user?.profilePicture,
           },
         },
         status_code: HttpStatus.CREATED,
@@ -317,7 +317,7 @@ export default class AuthenticationService {
             id: createdUser.id,
             email: createdUser.email || '',
             name: createdUser.name || '',
-            pic: createdUser?.profilePicture,
+            profilePicture: createdUser?.profilePicture,
           },
         },
         status_code: HttpStatus.CREATED,
@@ -333,7 +333,7 @@ export default class AuthenticationService {
           id: userExists.id,
           email: userExists.email || '',
           username: userExists.name || '',
-          pic: userExists?.profilePicture,
+          profilePicture: userExists?.profilePicture,
         },
       },
       access_token: accessToken,
@@ -428,7 +428,7 @@ export default class AuthenticationService {
             email: user.email,
             name: user.name,
             userType: user.userType,
-            pic: user?.profilePicture,
+            profilePicture: user?.profilePicture,
           },
         },
       };
@@ -519,7 +519,7 @@ export default class AuthenticationService {
             id: createdUser.id,
             email: createdUser.email || '',
             username: createdUser.name || '',
-            pic: createdUser?.profilePicture,
+            profilePicture: createdUser?.profilePicture,
           },
         },
         status_code: HttpStatus.CREATED,
@@ -535,7 +535,7 @@ export default class AuthenticationService {
           id: userExists.id,
           email: userExists.email || '',
           username: userExists.name || '',
-          pic: userExists?.profilePicture,
+          profilePicture: userExists?.profilePicture,
         },
       },
       access_token: accessToken,

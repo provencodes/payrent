@@ -78,7 +78,7 @@ export class User extends AbstractBaseEntity {
   bankName: string;
 
   @Column('jsonb', { nullable: true })
-  profilePicture: FileObject[];
+  profilePicture: FileObject;
 
   @Column({ nullable: true, default: true })
   isActive: boolean;

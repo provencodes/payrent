@@ -28,7 +28,7 @@ export interface UserInterface {
   accountNumber?: string;
   accountName?: string;
   bankName?: string;
-  profilePicture?: FileObject[];
+  profilePicture?: FileObject;
   isActive?: boolean;
   userType?: UserType;
   paystackAuthCode?: string;

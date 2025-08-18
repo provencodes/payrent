@@ -113,7 +113,7 @@ export class CreateUserDto {
   @ApiProperty({ type: [FileObject], required: false })
   @IsOptional()
   @IsArray()
-  profilePicture?: FileObject[];
+  profilePicture?: FileObject;
 
   @ApiProperty({ example: true })
   @IsOptional()
