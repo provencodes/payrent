@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import UserResponseDTO from './dto/user-response.dto';
 import { User } from './entities/user.entity';
 import CreateNewUserOptions from './options/CreateNewUserOptions';
@@ -10,8 +10,9 @@ import UserIdentifierOptionsType from './options/UserIdentifierOptions';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CustomHttpException } from '../../helpers/custom-http-filter';
 import * as SYS_MSG from '../../helpers/systemMessages';
-import { CreateUserDto } from './dto/create-user.dto';
 // import { UserInterface } from './interfaces/user.interface';
+import { randomBytes } from 'crypto';
+import { UpdateProfileDto } from './dto/update-user-dto';
 
 @Injectable()
 export default class UserService {
@@ -37,7 +38,7 @@ export default class UserService {
     return result;
   }
 
-  async updateProfile(id: string, updatePayload: CreateUserDto) {
+  async updateProfile(id: string, updatePayload: UpdateProfileDto) {
     const identifierOptions = {
       identifier: id,
       identifierType: 'id',
@@ -93,6 +94,9 @@ export default class UserService {
     const user: User = await this.userRepository.findOne({
       where: { id: identifier },
     });
+    if (!user) {
+      throw new NotFoundException(`User not found`);
+    }
     return user;
   }
 
@@ -191,5 +195,61 @@ export default class UserService {
     user.otpCooldownExpires = null;
 
     await this.userRepository.save(user);
+  }
+
+  // Generate unique referral code
+  async generateUniqueCode(length = 8): Promise<string> {
+    let code: string;
+    let exists = true;
+
+    while (exists) {
+      // create a random alphanumeric string
+      code = randomBytes(Math.ceil(length / 2))
+        .toString('hex')
+        .slice(0, length)
+        .toUpperCase();
+
+      // check if it already exists
+      const user = await this.userRepository.findOne({
+        where: { referralCode: code },
+      });
+      exists = !!user;
+    }
+
+    return code;
+  }
+
+  async getReferrals(userId: string) {
+    const user = await this.getUserById(userId);
+    const totalReferral = await this.getTotalReferrals(userId);
+    const todayReferrer = await this.getTodayReferrals(userId);
+
+    return {
+      success: true,
+      message: 'user referral metrics fetched successfully',
+      data: {
+        referrerCode: user?.referralCode || '',
+        totalReferrer: totalReferral,
+        todayReferrer: todayReferrer,
+      },
+    };
+  }
+
+  async getTotalReferrals(userId: string): Promise<number> {
+    return await this.userRepository.count({
+      where: { referredBy: { id: userId } },
+    });
+  }
+
+  async getTodayReferrals(userId: string): Promise<number> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return await this.userRepository.count({
+      where: {
+        referredBy: { id: userId },
+        createdAt: MoreThan(today),
+      },
+    });
   }
 }

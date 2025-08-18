@@ -6,5 +6,5 @@ DONE Get all banks and verify an account/ get account name
 new endpoint for listing joint-venture property
 portfolio
 wallet
-referral referral code, total referrer, today referrer
+referral referralCode, totalReferrer, todayReferrer
 multiple account number

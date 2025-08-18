@@ -1,7 +1,14 @@
 import { Installment } from './../../payment/entities/installment.entity';
 import * as bcrypt from 'bcrypt';
 import { Exclude, instanceToPlain } from 'class-transformer';
-import { Entity, Column, BeforeInsert, OneToMany, OneToOne } from 'typeorm';
+import {
+  Entity,
+  Column,
+  BeforeInsert,
+  OneToMany,
+  OneToOne,
+  ManyToOne,
+} from 'typeorm';
 import { AbstractBaseEntity } from '../../../entities/base.entity';
 import { Wallet } from '../../wallet/entities/wallet.entity';
 
@@ -40,6 +47,12 @@ export class User extends AbstractBaseEntity {
 
   @Column({ nullable: true, type: 'text' })
   referralCode: string;
+
+  @ManyToOne(() => User, (user) => user.referrals, { nullable: true })
+  referredBy?: User;
+
+  @OneToMany(() => User, (user) => user.referredBy)
+  referrals: User[];
 
   @Column({ nullable: true, type: 'text' })
   gender: string;

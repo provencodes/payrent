@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Request } from '@nestjs/common';
 import { User } from './entities/user.entity';
 import UserService from './user.service';
 import {
@@ -8,13 +8,23 @@ import {
   ApiBearerAuth,
   ApiBody,
 } from '@nestjs/swagger';
-import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateProfileDto } from './dto/update-user-dto';
 
 @ApiBearerAuth()
 @ApiTags('User')
 @Controller('users')
 export class UsersController {
   constructor(private readonly userService: UserService) {}
+
+  @Get('referrals')
+  @ApiOperation({ summary: 'Get a user referrer metrics' })
+  @ApiResponse({
+    status: 200,
+    description: 'User referral metrics fetched successfully',
+  })
+  async getReferrals(@Request() req) {
+    return await this.userService.getReferrals(req.user.sub);
+  }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a user by ID' })
@@ -31,7 +41,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Update user profile' })
   @ApiBody({
     description: 'Update user Profile',
-    type: CreateUserDto,
+    type: UpdateProfileDto,
   })
   @ApiResponse({
     status: 200,
@@ -40,7 +50,7 @@ export class UsersController {
   })
   async editProfile(
     @Param('id') id: string,
-    @Body() updatePayload: CreateUserDto,
+    @Body() updatePayload: UpdateProfileDto,
   ) {
     return await this.userService.updateProfile(id, updatePayload);
   }

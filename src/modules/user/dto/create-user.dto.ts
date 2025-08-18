@@ -5,11 +5,11 @@ import {
   IsOptional,
   IsString,
   IsBoolean,
-  IsArray,
+  IsObject,
 } from 'class-validator';
 import { UserType } from '../entities/user.entity';
 
-class FileObject {
+export class FileObject {
   @ApiProperty({ example: 'https://example.com/image.jpg' })
   @IsString()
   url: string;
@@ -110,9 +110,9 @@ export class CreateUserDto {
   @IsString()
   bankName?: string;
 
-  @ApiProperty({ type: [FileObject], required: false })
+  @ApiProperty({ type: FileObject, required: false })
   @IsOptional()
-  @IsArray()
+  @IsObject()
   profilePicture?: FileObject;
 
   @ApiProperty({ example: true })

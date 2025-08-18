@@ -31,6 +31,8 @@ import { generateUsername } from 'unique-username-generator';
 import UserResponseDTO from '../user/dto/user-response.dto';
 import { WalletService } from '../wallet/wallet.service';
 import { GoogleAuthPayloadDto } from './dto/google-auth.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export default class AuthenticationService {
@@ -39,6 +41,7 @@ export default class AuthenticationService {
     private jwtService: JwtService,
     private emailService: EmailService,
     private readonly walletService: WalletService,
+    @InjectRepository(User) private userRepository: Repository<User>,
   ) {}
 
   async createNewUser(createUserDto: CreateUserDTO) {
@@ -98,6 +101,16 @@ export default class AuthenticationService {
       //   }),
       // );
 
+      let referrer: User | null = null;
+
+      const referralCode = await this.userService.generateUniqueCode();
+
+      if (createUserDto.referralCode) {
+        referrer = await this.userRepository.findOne({
+          where: { referralCode: createUserDto.referralCode },
+        });
+      }
+
       const currentTime = new Date();
       const otp = await this.generateOtp();
       const hashedOtp = await this.hashOtp(otp);
@@ -114,6 +127,8 @@ export default class AuthenticationService {
         Object.assign(createUserDto, {
           otp: hashedOtp,
           otpCooldownExpires,
+          referralCode,
+          referredBy: referrer?.id || null,
         }),
       );
 

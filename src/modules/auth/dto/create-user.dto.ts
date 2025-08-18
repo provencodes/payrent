@@ -74,5 +74,5 @@ export class CreateUserDTO {
   })
   @IsString()
   @IsOptional()
-  refferalCode: string;
+  referralCode: string;
 }
