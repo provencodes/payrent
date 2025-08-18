@@ -24,8 +24,6 @@ const dataSource = new DataSource({
   ssl: isLocalDb
     ? false
     : {
-        // ca: readFileSync('/home/oluwaseyi/projects/payRent/ca.pem').toString(),
-        // ca: caCert,
         rejectUnauthorized: false,
       },
 });

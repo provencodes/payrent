@@ -314,8 +314,28 @@ agentCommission: number
   @IsNumber()
   renovationCost?: number;
 
+  @ApiPropertyOptional({ example: 4000 })
+  @IsOptional()
+  @IsNumber()
+  minimumDepositForInstallment?: number;
+
+  @ApiPropertyOptional({ example: 4000 })
+  @IsOptional()
+  @IsNumber()
+  legalAndAdministrativeFee?: number;
+
+  @ApiPropertyOptional({ example: 4000 })
+  @IsOptional()
+  @IsNumber()
+  agentCommission?: number;
+
   @ApiPropertyOptional({ example: true })
   @IsOptional()
   @IsBoolean()
   approved?: boolean;
+
+  @ApiPropertyOptional({ example: true })
+  @IsOptional()
+  @IsBoolean()
+  negotiable?: boolean;
 }

@@ -17,7 +17,7 @@ import { User } from '../user/entities/user.entity';
 import { Plan } from './entities/plan.entity';
 import UserService from '../user/user.service';
 import UserIdentifierOptionsType from '../user/options/UserIdentifierOptions';
-import { CreatePlanType } from './dto/paystack.dto';
+import { CreatePlanType, VerifyAccountDto } from './dto/paystack.dto';
 
 @Injectable()
 export class PaymentService {
@@ -389,5 +389,13 @@ export class PaymentService {
       default:
         throw new Error('Invalid payment frequency');
     }
+  }
+
+  async getBanks() {
+    return this.paystack.getBanks();
+  }
+
+  async verifyAccount(query: VerifyAccountDto) {
+    return this.paystack.verifyAccount(query.accountNumber, query.bankCode);
   }
 }

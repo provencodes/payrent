@@ -30,6 +30,23 @@ export class PaystackCallbackDto {
   trxref?: string;
 }
 
+export class VerifyAccountDto {
+  @ApiProperty({
+    description: 'account number',
+    example: '3044567890',
+  })
+  @IsNotEmpty()
+  @IsString()
+  accountNumber: string;
+
+  @ApiPropertyOptional({
+    description: 'bank code',
+    example: '063',
+  })
+  @IsString()
+  bankCode: string;
+}
+
 export type CreatePlanType = {
   name: string;
   amount: number;

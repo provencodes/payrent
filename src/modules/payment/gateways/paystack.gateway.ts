@@ -75,4 +75,33 @@ export class PaystackGateway implements PaymentGateway {
 
     return response.data.data; // includes subscription_code
   }
+
+  // get all paystack banks /bank/resolve?account_number=0022728151&bank_code=063
+  async getBanks(): Promise<any> {
+    try {
+      const response = await axios.get(`${this.baseUrl}/bank?country=nigeria`, {
+        headers: this.headers,
+      });
+
+      return response.data;
+    } catch (err) {
+      console.error(err.message || err);
+      throw new HttpException('Unable to get bank list', 404);
+    }
+  }
+
+  async verifyAccount(accountNumber: string, bankCode: string): Promise<any> {
+    try {
+      const response = await axios.get(
+        `${this.baseUrl}/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`,
+        {
+          headers: this.headers,
+        },
+      );
+
+      return response.data;
+    } catch (error) {
+      throw new HttpException('Unable to verify account', 404);
+    }
+  }
 }

@@ -174,6 +174,18 @@ export class Property {
   @Column('decimal', { precision: 12, scale: 2, nullable: true })
   renovationCost: number;
 
+  @Column('decimal', { precision: 12, scale: 2, nullable: true })
+  minimumDepositForInstallment: number;
+
+  @Column('decimal', { precision: 12, scale: 2, nullable: true })
+  legalAndAdministrativeFee: number;
+
+  @Column('decimal', { precision: 12, scale: 2, nullable: true })
+  agentCommission: number;
+
+  @Column({ nullable: false, default: false })
+  negotiable: boolean;
+
   @Column({ nullable: false, default: false })
   approved: boolean;
 
