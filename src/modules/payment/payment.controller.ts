@@ -17,11 +17,11 @@ import { skipAuth } from 'src/helpers/skipAuth';
 import { PaystackCallbackDto, VerifyAccountDto } from './dto/paystack.dto';
 
 @ApiTags('Payment')
+@ApiBearerAuth()
 @Controller('payment')
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
-  @ApiBearerAuth()
   @Post('initiate')
   async initiate(@Body() dto: InitiatePaymentDto) {
     return this.paymentService.initiate(dto);
@@ -35,13 +35,11 @@ export class PaymentController {
     return await this.paymentService.verify(query);
   }
 
-  @ApiBearerAuth()
   @Post('verify')
   async verify(@Body() dto: VerifyPaymentDto) {
     return this.paymentService.verify(dto);
   }
 
-  @skipAuth()
   @Post('webhook')
   @skipAuth()
   @HttpCode(200)
