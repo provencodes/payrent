@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { PartialType } from '@nestjs/mapped-types';
-import { IsNumber, IsString, IsUUID } from 'class-validator';
+import {
+  IsInt,
+  IsNotEmpty,
+  IsPositive,
+  IsString,
+  IsUUID,
+  Min,
+} from 'class-validator';
 
 export class CreateWalletDto {
   @ApiProperty({
@@ -16,15 +23,26 @@ export class FundWalletDto {
     example: 5000.0,
     description: 'Amount to fund the wallet with',
   })
-  @IsNumber()
-  amount: number;
+  @IsInt()
+  @IsPositive()
+  @Min(100)
+  amountNaira: number;
 
   @ApiProperty({
     example: 'd3f7a939-4fc0-4a1e-9a0b-92b748c63e2a',
     description: 'User ID of the wallet owner',
   })
   @IsString()
+  @IsNotEmpty()
   userId: string;
+
+  @ApiProperty({
+    example: 'johndoe@exmaple.com',
+    description: 'User email',
+  })
+  @IsString()
+  @IsNotEmpty()
+  email: string;
 }
 
 export class PayWithWalletDto {
@@ -32,8 +50,9 @@ export class PayWithWalletDto {
     example: 1500.0,
     description: 'Amount to deduct from the wallet',
   })
-  @IsNumber()
-  amount: number;
+  @IsInt()
+  @IsPositive()
+  amountNaira: number;
 
   @ApiProperty({
     example: 'd3f7a939-4fc0-4a1e-9a0b-92b748c63e2a',
@@ -43,11 +62,19 @@ export class PayWithWalletDto {
   userId: string;
 
   @ApiProperty({
-    example: 'Bingo ticket purchase',
+    example: 'shares',
     description: 'Purpose of the wallet payment',
   })
   @IsString()
   reason: string;
+
+  @ApiProperty({
+    example: 'shares',
+    description: 'Description of the payment',
+  })
+  @IsString()
+  @IsNotEmpty()
+  description: string;
 }
 
 export class VerifyWalletFundingDto {
@@ -64,6 +91,24 @@ export class VerifyWalletFundingDto {
   })
   @IsString()
   reference: string;
+}
+
+export class WithdrawDto {
+  @IsString()
+  @IsNotEmpty()
+  userId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  bankCode: string;
+
+  @IsString()
+  @IsNotEmpty()
+  accountNumber: string;
+
+  @IsInt()
+  @IsPositive()
+  amountNaira: number;
 }
 
 export class UpdateWalletDto extends PartialType(CreateWalletDto) {}

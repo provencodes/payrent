@@ -13,6 +13,7 @@ import {
 } from './dto/wallet.dto';
 import { PaystackGateway } from '../payment/gateways/paystack.gateway';
 import { WalletTransaction } from './entities/wallet-transaction.entity';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class WalletService {
@@ -21,33 +22,74 @@ export class WalletService {
     private readonly walletRepository: Repository<Wallet>,
     @InjectRepository(WalletTransaction)
     private readonly walletTransactionRepository: Repository<WalletTransaction>,
-    private readonly paystackService: PaystackGateway,
+    private readonly paystack: PaystackGateway,
   ) {}
 
   async createWallet(userId: string) {
     // const { userId } = createWalletDto;
 
-    const existingWallet = await this.walletRepository.findOne({
+    let wallet = await this.walletRepository.findOne({
       where: { userId },
     });
-    if (existingWallet) {
+    if (wallet) {
       throw new BadRequestException('Wallet already exists for this user');
     }
 
-    const wallet = this.walletRepository.create({ userId, balance: 0 });
+    wallet = this.walletRepository.create({ userId, balanceKobo: '0' });
     return await this.walletRepository.save(wallet);
   }
 
   async fundWallet(fundWalletDto: FundWalletDto) {
-    const { userId, amount } = fundWalletDto;
+    const { userId, amountNaira } = fundWalletDto;
 
     const wallet = await this.walletRepository.findOne({ where: { userId } });
     if (!wallet) throw new NotFoundException('Wallet not found');
 
     // TODO Take the money from the user!
 
-    wallet.balance = Number(wallet.balance) + Number(amount);
-    return await this.walletRepository.save(wallet);
+    const reference = `fund_${userId}_${Date.now()}_${randomUUID()}`;
+
+    const payload = {
+      email: fundWalletDto.email,
+      amount: amountNaira,
+      reference,
+      metadata: {
+        userId,
+        walletId: wallet.id,
+        purpose: 'wallet_funding',
+      },
+    };
+    const init = await this.paystack.initiatePayment(payload);
+    return { ...init, reference, amountKobo, walletId: wallet.id };
+  }
+
+  async verifyAndCredit(reference: string) {
+    const verification = await this.paystack.verifyTransaction(reference);
+    const status = verification?.data?.status; // 'success'
+    const amount = Number(verification?.data?.amount || 0); // in kobo
+    const metadata = verification?.data || {};
+
+    if (status !== 'success') {
+      throw new BadRequestException('Transaction not successful');
+    }
+
+    // Idempotent credit: if tx with reference exists, no-op
+    const exists = await this.txRepo.findOne({ where: { reference } });
+    if (exists) return { credited: false, reason: 'already-processed' };
+
+    // We need a wallet: we can encode userId in reference when initiating.
+    const parts = reference.split('_');
+    const userId = parts[1];
+    const wallet = await this.getOrCreateWallet(userId);
+
+    await this.applyCredit(wallet.id, amount, 'funding', reference, metadata);
+
+    return {
+      credited: true,
+      walletId: wallet.id,
+      newBalanceKobo: (await this.walletRepo.findOneBy({ id: wallet.id }))!
+        .balanceKobo,
+    };
   }
 
   async payWithWallet(payWithWalletDto: PayWithWalletDto) {
@@ -90,7 +132,7 @@ export class WalletService {
     const { reference, userId } = dto;
 
     // Assume you have a PaystackService that verifies transactions
-    const transaction = await this.paystackService.verifyPayment(reference);
+    const transaction = await this.paystack.verifyPayment(reference);
     if (!transaction || transaction.status !== 'success') {
       throw new BadRequestException('Transaction verification failed');
     }

@@ -17,7 +17,8 @@ import { User } from '../user/entities/user.entity';
 import { Plan } from './entities/plan.entity';
 import UserService from '../user/user.service';
 import UserIdentifierOptionsType from '../user/options/UserIdentifierOptions';
-import { CreatePlanType, VerifyAccountDto } from './dto/paystack.dto';
+import { VerifyAccountDto } from './dto/paystack.dto';
+import { CreatePlanType } from './gateways/gateway.interface';
 
 @Injectable()
 export class PaymentService {

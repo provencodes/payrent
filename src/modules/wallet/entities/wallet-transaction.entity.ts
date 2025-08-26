@@ -4,10 +4,14 @@ import {
   Column,
   CreateDateColumn,
   ManyToOne,
+  Index,
 } from 'typeorm';
 import { Wallet } from './wallet.entity';
 
-@Entity()
+export type WalletTxType = 'credit' | 'debit';
+export type WalletTxReason = 'funding' | 'spend' | 'withdrawal' | 'reversal';
+
+@Entity('wallet_transactions')
 export class WalletTransaction {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -15,24 +19,28 @@ export class WalletTransaction {
   @Column()
   walletId: string;
 
+  @ManyToOne(() => Wallet, (wallet) => wallet.transactions, { eager: true })
+  wallet: Wallet;
+
   @Column()
   userId: string;
 
   @Column()
-  type: 'funding' | 'debit';
+  type: WalletTxType;
 
-  @Column('decimal', { precision: 10, scale: 2, default: 0 })
-  amount: number;
+  @Column({ type: 'bigint' })
+  amountKobo: string;
 
-  @Column({ nullable: true })
+  @Index({ unique: true })
+  @Column({ type: 'varchar', nullable: true, unique: true })
   reference?: string;
 
   @Column({ nullable: true })
-  reason?: string;
+  reason?: WalletTxReason;
+
+  @Column({ type: 'jsonb', nullable: true })
+  meta: any;
 
   @CreateDateColumn()
   createdAt: Date;
-
-  @ManyToOne(() => Wallet, (wallet) => wallet.transactions)
-  wallet: Wallet;
 }

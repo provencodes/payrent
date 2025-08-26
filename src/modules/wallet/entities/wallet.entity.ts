@@ -7,6 +7,7 @@ import {
   UpdateDateColumn,
   JoinColumn,
   OneToMany,
+  Index,
 } from 'typeorm';
 import { User } from 'src/modules/user/entities/user.entity';
 import { WalletTransaction } from './wallet-transaction.entity';
@@ -16,6 +17,7 @@ export class Wallet {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Index({ unique: true })
   @Column({ type: 'uuid' })
   userId: string;
 
@@ -23,8 +25,8 @@ export class Wallet {
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @Column('decimal', { precision: 12, scale: 2, default: 0 })
-  balance: number;
+  @Column({ type: 'bigint' })
+  balanceKobo: string;
 
   @Column('text', { nullable: true })
   paystackCustomerCode: string;

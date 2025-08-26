@@ -4,7 +4,9 @@ DONE Get all banks and verify an account/ get account name
 DONE referral referralCode, totalReferrer, todayReferrer
 
 
-new endpoint for listing joint-venture property
+new endpoint for getting joint-venture property (get joint-ventures listing filter by renovationrequest(status= pending|under-review|approved|rejected) or ongoing(status= cancelled|ongoing|completed))
+get a single property by status
 portfolio
 wallet
 multiple account number
+list of referral and updating bonus when user signup

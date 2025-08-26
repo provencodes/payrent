@@ -72,9 +72,9 @@ async function bootstrap() {
     .setVersion('1.0')
     .addTag('PayRent Application')
     .addBearerAuth()
-    // .setContact('Payrent Dev Team', 'https://sparkly.so', 'admin@sparkly.so')
+    // .setContact('Payrent Dev Team', 'https://domain.com', 'admin@payrent.com')
     .setLicense('MIT', 'https://opensource.org/licenses/MIT')
-    // .setTermsOfService('https://sparkly.so/terms')
+    // .setTermsOfService('https://payrent.com/terms')
     .build();
 
   const document = SwaggerModule.createDocument(app, options);

@@ -1,11 +1,12 @@
 import { Injectable, HttpException } from '@nestjs/common';
 import axios from 'axios';
-import { PaymentGateway } from './gateway.interface';
-import { CreatePlanType, PaystackSubscriptionDto } from './../dto/paystack.dto';
+import { TransferRecipient } from './gateway.interface';
+import { PaystackSubscriptionDto } from './../dto/paystack.dto';
+import { CreatePlanType } from './gateway.interface';
 // import { InitiatePaymentDto } from '../dto/initiate-payment.dto';
 
 @Injectable()
-export class PaystackGateway implements PaymentGateway {
+export class PaystackGateway {
   private readonly baseUrl = 'https://api.paystack.co';
 
   private readonly headers = {
@@ -21,6 +22,8 @@ export class PaystackGateway implements PaymentGateway {
           email: dto.email,
           amount: dto.amount * 100, // Paystack expects kobo
           metadata: { ...dto.metadata },
+          currency: 'NGN',
+          reference: dto?.reference || null,
         },
         { headers: this.headers },
       );
@@ -47,7 +50,7 @@ export class PaystackGateway implements PaymentGateway {
   // paystack.service.ts
   async createPlan(payload: CreatePlanType) {
     const response = await axios.post(
-      'https://api.paystack.co/plan',
+      `${this.baseUrl}/plan`,
       {
         name: payload.name || `Auto plan ${Date.now()}`,
         interval: payload.interval,
@@ -64,7 +67,7 @@ export class PaystackGateway implements PaymentGateway {
 
   async subscribeToPlan(payload: PaystackSubscriptionDto) {
     const response = await axios.post(
-      'https://api.paystack.co/subscription',
+      `${this.baseUrl}/subscription`,
       {
         customer: payload.customer,
         plan: payload.plan,
@@ -103,5 +106,38 @@ export class PaystackGateway implements PaymentGateway {
     } catch (error) {
       throw new HttpException('Unable to verify account', 404);
     }
+  }
+
+  async createTransferRecipient(payload: TransferRecipient) {
+    const response = await axios.post(
+      `${this.baseUrl}/transferrecipient`,
+      {
+        type: 'nuban',
+        name: payload.name,
+        bank_code: payload.bankCode,
+        account_number: payload.accountNumber,
+        currency: 'NGN',
+      },
+      { headers: this.headers },
+    );
+
+    return response.data;
+  }
+
+  async initiateTransfer(payload) {
+    const response = await axios.post(
+      `${this.baseUrl}/transferrecipient`,
+      {
+        source: 'balance',
+        amount: payload.amountKobo,
+        recipient: payload.recipientCode,
+        reason: payload.reason,
+        reference: payload.reference,
+        currency: 'NGN',
+      },
+      { headers: this.headers },
+    );
+
+    return response.data;
   }
 }
