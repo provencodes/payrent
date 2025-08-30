@@ -5,9 +5,10 @@ DONE referral referralCode, totalReferrer, todayReferrer
 
 DONE new endpoint for getting joint-venture property (get joint-ventures listing filter by renovationrequest(status= pending|under-review|approved|rejected) or ongoing(status= cancelled|ongoing|completed))
 DONE get a single property by status
+DONE list of referral and updating bonus when user signup
+
+ONGOING wallet
 
 portfolio
-wallet
-DONE list of referral and updating bonus when user signup
 
 multiple account number

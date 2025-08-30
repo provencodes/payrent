@@ -267,7 +267,7 @@ export default class UserService {
       data: {
         referrerCode: user?.referralCode || '',
         totalReferrals: referrals.length,
-        referrals: referrals.map(referral => ({
+        referrals: referrals.map((referral) => ({
           id: referral.id,
           name: referral.name,
           email: referral.email,

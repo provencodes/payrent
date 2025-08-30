@@ -43,7 +43,8 @@ export default class AuthenticationService {
     private emailService: EmailService,
     private readonly walletService: WalletService,
     @InjectRepository(User) private userRepository: Repository<User>,
-    @InjectRepository(WalletTransaction) private walletTransactionRepository: Repository<WalletTransaction>,
+    @InjectRepository(WalletTransaction)
+    private walletTransactionRepository: Repository<WalletTransaction>,
   ) {}
 
   async createNewUser(createUserDto: CreateUserDTO) {
@@ -160,13 +161,17 @@ export default class AuthenticationService {
       // Credit referrer with 250 naira bonus if referral code was used
       if (referrer) {
         try {
-          const referrerWallet = await this.walletService.getOrCreateWallet(referrer.id);
+          const referrerWallet = await this.walletService.getOrCreateWallet(
+            referrer.id,
+          );
           const bonusAmount = 25000; // 250 naira in kobo
-          
+
           // Credit the referrer's wallet
-          referrerWallet.balanceKobo = (Number(referrerWallet.balanceKobo) + bonusAmount).toString();
+          referrerWallet.balanceKobo = (
+            Number(referrerWallet.balanceKobo) + bonusAmount
+          ).toString();
           await this.userRepository.manager.save(referrerWallet);
-          
+
           // Log the transaction
           await this.walletTransactionRepository.save({
             userId: referrer.id,

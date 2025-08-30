@@ -9,7 +9,12 @@ import {
 import { Wallet } from './wallet.entity';
 
 export type WalletTxType = 'credit' | 'debit';
-export type WalletTxReason = 'funding' | 'spend' | 'withdrawal' | 'reversal';
+export type WalletTxReason =
+  | 'funding'
+  | 'spend'
+  | 'withdrawal'
+  | 'reversal'
+  | 'referral_bonus';
 
 @Entity('wallet_transactions')
 export class WalletTransaction {

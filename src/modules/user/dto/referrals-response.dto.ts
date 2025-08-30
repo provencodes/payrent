@@ -13,7 +13,9 @@ export class ReferralUserDto {
   @ApiProperty({ example: '2024-01-15T10:30:00Z' })
   joinedAt: Date;
 
-  @ApiProperty({ example: { url: 'https://example.com/avatar.jpg', public_id: 'avatar123' } })
+  @ApiProperty({
+    example: { url: 'https://example.com/avatar.jpg', public_id: 'avatar123' },
+  })
   profilePicture?: { url: string; public_id: string };
 }
 
@@ -29,8 +31,11 @@ export class ReferralsListResponseDto {
     properties: {
       referrerCode: { type: 'string', example: 'ABC123XY' },
       totalReferrals: { type: 'number', example: 5 },
-      referrals: { type: 'array', items: { $ref: '#/components/schemas/ReferralUserDto' } }
-    }
+      referrals: {
+        type: 'array',
+        items: { $ref: '#/components/schemas/ReferralUserDto' },
+      },
+    },
   })
   data: {
     referrerCode: string;

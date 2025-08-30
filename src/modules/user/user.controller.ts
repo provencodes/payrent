@@ -28,7 +28,9 @@ export class UsersController {
   }
 
   @Get('referrals/list')
-  @ApiOperation({ summary: 'Get detailed list of users referred by current user' })
+  @ApiOperation({
+    summary: 'Get detailed list of users referred by current user',
+  })
   @ApiResponse({
     status: 200,
     description: 'Referrals list fetched successfully',
