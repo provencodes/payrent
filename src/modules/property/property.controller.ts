@@ -108,6 +108,17 @@ export class PropertyController {
     return this.propertyService.renovationRequest(renovationRequestDto);
   }
 
+  @ApiOperation({ summary: 'Get joint-venture property by status' })
+  @ApiResponse({
+    status: 200,
+    description: 'joint venture property by status found',
+    type: [Property],
+  })
+  @Get('joint-ventures')
+  async getProperties(@Query() filterDto: FilterPropertyDto) {
+    return this.propertyService.getPropertiesByCategory(filterDto.category);
+  }
+
   @Patch(':id')
   @ApiOperation({ summary: 'Update a property' })
   // @UseInterceptors(
@@ -157,17 +168,5 @@ export class PropertyController {
     message: string;
   }> {
     return this.propertyService.remove(id);
-  }
-
-  @Get(':id')
-  @ApiOperation({ summary: 'Get property by status' })
-  @ApiResponse({
-    status: 200,
-    description: 'joint venture property by status found',
-    type: [Property],
-  })
-  @Get('joint-ventures')
-  async getProperties(@Query() filterDto: FilterPropertyDto) {
-    return this.propertyService.getPropertiesByCategory(filterDto.category);
   }
 }
