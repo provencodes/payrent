@@ -96,8 +96,14 @@ export enum PropertyCategory {
 }
 
 export class FilterPropertyDto {
+  @ApiPropertyOptional({
+    enum: PropertyCategory,
+    description: 'Filter properties by category',
+    example: PropertyCategory.CATEGORY1,
+  })
+  @IsOptional()
   @IsEnum(PropertyCategory, {
     message: 'category must be category1 or category2',
   })
-  category: PropertyCategory;
+  category?: PropertyCategory;
 }

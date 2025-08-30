@@ -33,6 +33,7 @@ import { WalletService } from '../wallet/wallet.service';
 import { GoogleAuthPayloadDto } from './dto/google-auth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { WalletTransaction } from '../wallet/entities/wallet-transaction.entity';
 
 @Injectable()
 export default class AuthenticationService {
@@ -42,6 +43,7 @@ export default class AuthenticationService {
     private emailService: EmailService,
     private readonly walletService: WalletService,
     @InjectRepository(User) private userRepository: Repository<User>,
+    @InjectRepository(WalletTransaction) private walletTransactionRepository: Repository<WalletTransaction>,
   ) {}
 
   async createNewUser(createUserDto: CreateUserDTO) {
@@ -154,6 +156,31 @@ export default class AuthenticationService {
       await this.emailService.sendEMail(sendMailDto);
 
       await this.walletService.getOrCreateWallet(user.id);
+
+      // Credit referrer with 250 naira bonus if referral code was used
+      if (referrer) {
+        try {
+          const referrerWallet = await this.walletService.getOrCreateWallet(referrer.id);
+          const bonusAmount = 25000; // 250 naira in kobo
+          
+          // Credit the referrer's wallet
+          referrerWallet.balanceKobo = (Number(referrerWallet.balanceKobo) + bonusAmount).toString();
+          await this.userRepository.manager.save(referrerWallet);
+          
+          // Log the transaction
+          await this.walletTransactionRepository.save({
+            userId: referrer.id,
+            walletId: referrerWallet.id,
+            type: 'credit',
+            amountKobo: bonusAmount.toString(),
+            reason: 'referral_bonus',
+            meta: { referredUserId: user.id, referredUserName: user.name },
+          });
+        } catch (error) {
+          console.error('Error crediting referral bonus:', error);
+          // Don't fail user creation if bonus fails
+        }
+      }
 
       return {
         message:

@@ -9,6 +9,7 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { UpdateProfileDto } from './dto/update-user-dto';
+import { ReferralsListResponseDto } from './dto/referrals-response.dto';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -24,6 +25,17 @@ export class UsersController {
   })
   async getReferrals(@Request() req) {
     return await this.userService.getReferrals(req.user.sub);
+  }
+
+  @Get('referrals/list')
+  @ApiOperation({ summary: 'Get detailed list of users referred by current user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Referrals list fetched successfully',
+    type: ReferralsListResponseDto,
+  })
+  async getReferralsList(@Request() req) {
+    return await this.userService.getReferralsList(req.user.sub);
   }
 
   @Get(':id')

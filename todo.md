@@ -8,6 +8,6 @@ DONE get a single property by status
 
 portfolio
 wallet
-list of referral and updating bonus when user signup
+DONE list of referral and updating bonus when user signup
 
 multiple account number

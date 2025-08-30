@@ -252,4 +252,29 @@ export default class UserService {
       },
     });
   }
+
+  async getReferralsList(userId: string) {
+    const user = await this.getUserById(userId);
+    const referrals = await this.userRepository.find({
+      where: { referredBy: { id: userId } },
+      select: ['id', 'name', 'email', 'createdAt', 'profilePicture'],
+      order: { createdAt: 'DESC' },
+    });
+
+    return {
+      success: true,
+      message: 'Referrals list fetched successfully',
+      data: {
+        referrerCode: user?.referralCode || '',
+        totalReferrals: referrals.length,
+        referrals: referrals.map(referral => ({
+          id: referral.id,
+          name: referral.name,
+          email: referral.email,
+          joinedAt: referral.createdAt,
+          profilePicture: referral.profilePicture,
+        })),
+      },
+    };
+  }
 }

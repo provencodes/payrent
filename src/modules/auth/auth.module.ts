@@ -13,6 +13,7 @@ import { FacebookStrategy } from './strategies/facebook.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { EmailService } from '../mailer/mailer.service';
 import { WalletModule } from '../wallet/wallet.module';
+import { WalletTransaction } from '../wallet/entities/wallet-transaction.entity';
 
 @Module({
   controllers: [RegistrationController],
@@ -26,7 +27,7 @@ import { WalletModule } from '../wallet/wallet.module';
     EmailService,
   ],
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, WalletTransaction]),
     PassportModule,
     WalletModule,
     JwtModule.register({
