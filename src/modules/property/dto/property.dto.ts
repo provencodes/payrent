@@ -89,3 +89,15 @@ export class GetPropertiesDto {
   @IsEnum(['asc', 'desc'])
   order: 'asc' | 'desc' = 'desc';
 }
+
+export enum PropertyCategory {
+  CATEGORY1 = 'category1',
+  CATEGORY2 = 'category2',
+}
+
+export class FilterPropertyDto {
+  @IsEnum(PropertyCategory, {
+    message: 'category must be category1 or category2',
+  })
+  category: PropertyCategory;
+}

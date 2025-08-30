@@ -6,11 +6,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Property } from './entities/property.entity';
-import { CreatePropertyDto } from './dto/create-property.dto';
+import { CreatePropertyDto, PropertyStatus } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { GetAllPropertyDto } from './dto/property-response.dto';
-import { GetPropertiesDto } from './dto/property.dto';
+import { GetPropertiesDto, PropertyCategory } from './dto/property.dto';
 import { ListingType } from './dto/create-property.dto';
 import { RenovationRequestDto } from './dto/renovation-request.dto';
 @Injectable()
@@ -260,6 +260,56 @@ export class PropertyService {
         rentedProperties,
         vacantProperties,
       },
+    };
+  }
+
+  async getPropertiesByCategory(
+    category: PropertyCategory,
+  ): Promise<{ message: string; data: Property[] }> {
+    let statuses: PropertyStatus[];
+
+    if (category === PropertyCategory.CATEGORY1) {
+      statuses = [
+        PropertyStatus.PENDING,
+        PropertyStatus.UNDER_REVIEW,
+        PropertyStatus.APPROVED,
+        PropertyStatus.REJECTED,
+      ];
+    } else {
+      statuses = [
+        PropertyStatus.CANCELLED,
+        PropertyStatus.ONGOING,
+        PropertyStatus.COMPLETED,
+      ];
+    }
+    const properties = await this.propertyRepository
+      .createQueryBuilder('property')
+      .where('property.listingType = :listingType', {
+        listingType: 'joint-venture',
+      })
+      .andWhere('property.status @> ARRAY[:...statuses]', { statuses })
+      .getMany();
+
+    return {
+      message: 'Properties fetched successfully',
+      data: properties,
+    };
+  }
+
+  async getPropertiesByStatus(
+    status: string,
+  ): Promise<{ message: string; data: Property }> {
+    const property = await this.propertyRepository
+      .createQueryBuilder('property')
+      .where('property.listingType = :listingType', {
+        listingType: 'joint-venture',
+      })
+      .andWhere('property.status = :status', { status })
+      .getOne();
+
+    return {
+      message: 'Properties fetched successfully',
+      data: property,
     };
   }
 }

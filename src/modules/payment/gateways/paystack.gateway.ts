@@ -3,6 +3,7 @@ import axios from 'axios';
 import { TransferRecipient } from './gateway.interface';
 import { PaystackSubscriptionDto } from './../dto/paystack.dto';
 import { CreatePlanType } from './gateway.interface';
+import { randomUUID } from 'crypto';
 // import { InitiatePaymentDto } from '../dto/initiate-payment.dto';
 
 @Injectable()
@@ -15,6 +16,11 @@ export class PaystackGateway {
   };
 
   async initiatePayment(dto: any): Promise<any> {
+    if (!dto.metadata.userId) {
+      throw new HttpException('userId is required in the dto.metadata', 400);
+    }
+
+    const defaultRef = `trx_${dto.metadata.userId}_${Date.now()}_${randomUUID()}`;
     try {
       const response = await axios.post(
         `${this.baseUrl}/transaction/initialize`,
@@ -23,7 +29,7 @@ export class PaystackGateway {
           amount: dto.amount * 100, // Paystack expects kobo
           metadata: { ...dto.metadata },
           currency: 'NGN',
-          reference: dto?.reference || null,
+          reference: dto?.reference || defaultRef,
         },
         { headers: this.headers },
       );

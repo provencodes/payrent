@@ -17,7 +17,7 @@ export class WalletController {
   @Post('create')
   @ApiOperation({ summary: 'Create a wallet for a user' })
   createWallet(@Body() createWalletDto: CreateWalletDto) {
-    return this.walletService.createWallet(createWalletDto.userId);
+    return this.walletService.getOrCreateWallet(createWalletDto.userId);
   }
 
   @Post('fund')

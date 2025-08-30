@@ -45,4 +45,9 @@ export class Wallet {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  // Computed property to get balance in naira
+  get balance(): number {
+    return Number(this.balanceKobo) / 100;
+  }
 }

@@ -153,7 +153,7 @@ export default class AuthenticationService {
       };
       await this.emailService.sendEMail(sendMailDto);
 
-      await this.walletService.createWallet(user.id);
+      await this.walletService.getOrCreateWallet(user.id);
 
       return {
         message:

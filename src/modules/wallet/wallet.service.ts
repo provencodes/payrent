@@ -25,14 +25,12 @@ export class WalletService {
     private readonly paystack: PaystackGateway,
   ) {}
 
-  async createWallet(userId: string) {
-    // const { userId } = createWalletDto;
-
+  async getOrCreateWallet(userId: string) {
     let wallet = await this.walletRepository.findOne({
       where: { userId },
     });
     if (wallet) {
-      throw new BadRequestException('Wallet already exists for this user');
+      return wallet;
     }
 
     wallet = this.walletRepository.create({ userId, balanceKobo: '0' });
@@ -60,11 +58,12 @@ export class WalletService {
       },
     };
     const init = await this.paystack.initiatePayment(payload);
-    return { ...init, reference, amountKobo, walletId: wallet.id };
+    return init.data.authorization_url;
+    // return { ...init, reference, amount, walletId: wallet.id };
   }
 
   async verifyAndCredit(reference: string) {
-    const verification = await this.paystack.verifyTransaction(reference);
+    const verification = await this.paystack.verifyPayment(reference);
     const status = verification?.data?.status; // 'success'
     const amount = Number(verification?.data?.amount || 0); // in kobo
     const metadata = verification?.data || {};
@@ -74,7 +73,9 @@ export class WalletService {
     }
 
     // Idempotent credit: if tx with reference exists, no-op
-    const exists = await this.txRepo.findOne({ where: { reference } });
+    const exists = await this.walletTransactionRepository.findOne({
+      where: { reference },
+    });
     if (exists) return { credited: false, reason: 'already-processed' };
 
     // We need a wallet: we can encode userId in reference when initiating.
@@ -87,37 +88,37 @@ export class WalletService {
     return {
       credited: true,
       walletId: wallet.id,
-      newBalanceKobo: (await this.walletRepo.findOneBy({ id: wallet.id }))!
-        .balanceKobo,
+      newBalanceKobo: (await this.walletRepository.findOneBy({
+        id: wallet.id,
+      }))!.balanceKobo,
     };
   }
 
   async payWithWallet(payWithWalletDto: PayWithWalletDto) {
-    const { userId, amount, reason } = payWithWalletDto;
+    const { userId, amountNaira, reason } = payWithWalletDto;
 
     const wallet = await this.walletRepository.findOne({ where: { userId } });
     if (!wallet) throw new NotFoundException('Wallet not found');
 
-    if (wallet.balance < amount) {
+    const amountKobo = amountNaira * 100;
+    if (Number(wallet.balanceKobo) < amountKobo) {
       throw new BadRequestException('Insufficient wallet balance');
     }
 
-    wallet.balance = Number(wallet.balance) - Number(amount);
+    wallet.balanceKobo = (Number(wallet.balanceKobo) - amountKobo).toString();
     const updatedWallet = await this.walletRepository.save(wallet);
 
-    // Optionally, log this transaction
-    // e.g., this.logWalletTransaction(userId, amount, reason);
     await this.logTransaction({
       userId,
       walletId: wallet.id,
       type: 'debit',
-      amount,
+      amountKobo: amountKobo.toString(),
       reason,
     });
 
     return {
       message: 'Payment successful',
-      balance: updatedWallet.balance,
+      balanceKobo: updatedWallet.balanceKobo,
       reason,
     };
   }
@@ -129,47 +130,46 @@ export class WalletService {
   }
 
   async verifyWalletFunding(dto: VerifyWalletFundingDto) {
-    const { reference, userId } = dto;
-
-    // Assume you have a PaystackService that verifies transactions
-    const transaction = await this.paystack.verifyPayment(reference);
-    if (!transaction || transaction.status !== 'success') {
-      throw new BadRequestException('Transaction verification failed');
-    }
-
-    const amount = transaction.amount / 100; // Convert from kobo to naira
-
-    const wallet = await this.walletRepository.findOne({ where: { userId } });
-    if (!wallet) throw new NotFoundException('Wallet not found');
-
-    wallet.balance += amount;
-
-    const updatedWallet = await this.walletRepository.save(wallet);
-
-    await this.logTransaction({
-      userId,
-      walletId: wallet.id,
-      type: 'funding',
-      amount,
-      reference,
-      reason: 'Wallet funding',
-    });
-
-    return {
-      message: 'Wallet funded successfully',
-      balance: updatedWallet.balance,
-    };
+    return await this.verifyAndCredit(dto.reference);
   }
 
   private async logTransaction(data: {
     userId: string;
     walletId: string;
-    type: 'funding' | 'debit';
-    amount: number;
+    type: 'credit' | 'debit';
+    amountKobo: string;
     reference?: string;
     reason?: string;
+    meta?: any;
   }) {
-    const transaction = this.walletTransactionRepository.create(data);
+    const transaction = this.walletTransactionRepository.create({
+      ...data,
+      reason: data.reason as any,
+    });
     return await this.walletTransactionRepository.save(transaction);
+  }
+
+  private async applyCredit(
+    walletId: string,
+    amountKobo: number,
+    reason: string,
+    reference: string,
+    metadata?: any,
+  ) {
+    const wallet = await this.walletRepository.findOneBy({ id: walletId });
+    if (!wallet) throw new NotFoundException('Wallet not found');
+
+    wallet.balanceKobo = (Number(wallet.balanceKobo) + amountKobo).toString();
+    await this.walletRepository.save(wallet);
+
+    await this.logTransaction({
+      userId: wallet.userId,
+      walletId,
+      type: 'credit',
+      amountKobo: amountKobo.toString(),
+      reference,
+      reason,
+      meta: metadata,
+    });
   }
 }

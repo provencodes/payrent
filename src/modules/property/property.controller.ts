@@ -32,7 +32,7 @@ import {
   GetAllPropertyDto,
   PropertyResponseDto,
 } from './dto/property-response.dto';
-import { GetPropertiesDto } from './dto/property.dto';
+import { FilterPropertyDto, GetPropertiesDto } from './dto/property.dto';
 import { RenovationRequestDto } from './dto/renovation-request.dto';
 
 @ApiBearerAuth()
@@ -157,5 +157,17 @@ export class PropertyController {
     message: string;
   }> {
     return this.propertyService.remove(id);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get property by status' })
+  @ApiResponse({
+    status: 200,
+    description: 'joint venture property by status found',
+    type: [Property],
+  })
+  @Get('joint-ventures')
+  async getProperties(@Query() filterDto: FilterPropertyDto) {
+    return this.propertyService.getPropertiesByCategory(filterDto.category);
   }
 }
