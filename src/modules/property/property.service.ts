@@ -364,4 +364,76 @@ export class PropertyService {
       },
     };
   }
+
+  async getRentalProperties(query: GetPropertiesDto) {
+    const {
+      page = 1,
+      limit = 20,
+      orderBy = 'createdAt',
+      order = 'DESC',
+      titleSearch,
+      addressSearch,
+      rentalPriceMin,
+      rentalPriceMax,
+      ...filters
+    } = query;
+
+    const qb = this.propertyRepository.createQueryBuilder('property');
+
+    // Filter for rental properties only
+    qb.where('property.listingType = :listingType', { listingType: 'rent' })
+      .andWhere('property.approved = :approved', { approved: true });
+
+    // Apply other filters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        qb.andWhere(`property.${key} = :${key}`, { [key]: value });
+      }
+    });
+
+    // Search filters
+    if (titleSearch) {
+      qb.andWhere('property.title ILIKE :titleSearch', {
+        titleSearch: `%${titleSearch}%`,
+      });
+    }
+
+    if (addressSearch) {
+      qb.andWhere('property.address ILIKE :addressSearch', {
+        addressSearch: `%${addressSearch}%`,
+      });
+    }
+
+    // Price range filters
+    if (rentalPriceMin !== undefined) {
+      qb.andWhere('property.rentalPrice >= :rentalPriceMin', {
+        rentalPriceMin,
+      });
+    }
+    if (rentalPriceMax !== undefined) {
+      qb.andWhere('property.rentalPrice <= :rentalPriceMax', {
+        rentalPriceMax,
+      });
+    }
+
+    // Pagination and sorting
+    qb.skip((page - 1) * limit)
+      .take(limit)
+      .orderBy(`property.${orderBy}`, order.toUpperCase() as 'ASC' | 'DESC');
+
+    const [items, total] = await qb.getManyAndCount();
+
+    return {
+      message: 'Rental properties fetched successfully',
+      data: {
+        items,
+        meta: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        },
+      },
+    };
+  }
 }

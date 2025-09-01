@@ -141,6 +141,7 @@ POST /auth/facebook          # Facebook OAuth
 ### Property Endpoints
 ```
 GET    /properties           # Get all properties
+GET    /properties/rentals   # Get available rental properties
 POST   /properties           # Create property
 GET    /properties/:id       # Get property by ID
 PATCH  /properties/:id       # Update property
@@ -165,9 +166,11 @@ POST /landlord/joint-ventures # Joint venture investment
 
 ### Tenant Endpoints
 ```
-POST /tenant/rent-savings     # Create rent savings plan
-POST /tenant/loan/apply       # Apply for loan
-GET  /tenant/rent-payments    # Get rent payment history
+GET  /tenant/available-rentals # Get available rental properties
+POST /tenant/rent-property     # Rent a property
+POST /tenant/rent-savings      # Create rent savings plan
+POST /tenant/loan/apply        # Apply for loan
+GET  /tenant/rent-payments     # Get rent payment history
 GET  /tenant/loan-applications # Get loan applications
 ```
 

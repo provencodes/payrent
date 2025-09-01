@@ -84,6 +84,17 @@ export class PropertyController {
     return this.propertyService.getAllProperties(query);
   }
 
+  @Get('rentals')
+  @ApiOperation({ summary: 'Get available rental properties' })
+  @ApiResponse({
+    status: 200,
+    description: 'Available rental properties found',
+    type: [Property],
+  })
+  async getRentalProperties(@Query() query: GetPropertiesDto) {
+    return this.propertyService.getRentalProperties(query);
+  }
+
   @Get('joint-ventures')
   @ApiOperation({ summary: 'Get joint-venture property by status' })
   @ApiResponse({

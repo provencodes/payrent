@@ -6,10 +6,12 @@ import {
   Get,
   Param,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { TenantService } from './tenant.service';
 import { SaveRentDto, FundSavingsDto } from './dto/tenant.dto';
 import { ApplyLoanDto } from './dto/loan.dto';
+import { RentPropertyDto } from './dto/rent-property.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -88,6 +90,34 @@ export class TenantController {
       savingsId,
       req.user.sub,
       fundSavingsDto.amount,
+    );
+  }
+
+  @Get('available-rentals')
+  @ApiOperation({ summary: 'Get available rental properties' })
+  @ApiResponse({
+    status: 200,
+    description: 'Available rental properties fetched successfully',
+  })
+  getAvailableRentals(
+    @Query('page') page = 1,
+    @Query('limit') limit = 20,
+  ) {
+    return this.tenantService.getAvailableRentals(Number(page), Number(limit));
+  }
+
+  @Post('rent-property')
+  @ApiOperation({ summary: 'Rent a property' })
+  @ApiBody({ type: RentPropertyDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Property rented successfully',
+  })
+  rentProperty(@Body() rentPropertyDto: RentPropertyDto, @Request() req) {
+    return this.tenantService.rentProperty(
+      rentPropertyDto,
+      req.user.sub,
+      req.user.email,
     );
   }
 }

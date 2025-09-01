@@ -7,6 +7,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SaveRentDto } from './dto/tenant.dto';
 import { ApplyLoanDto } from './dto/loan.dto';
+import { RentPropertyDto, PaymentMethod } from './dto/rent-property.dto';
+import { Property } from '../property/entities/property.entity';
+import { PaymentService } from '../payment/payment.service';
 import { RentSavings } from './entities/rent-savings.entity';
 import { LoanApplication } from './entities/loan-application.entity';
 import { Rental } from '../property/entities/rental.entity';
@@ -22,7 +25,10 @@ export class TenantService {
     private readonly loanApplicationRepo: Repository<LoanApplication>,
     @InjectRepository(Rental)
     private readonly rentalRepo: Repository<Rental>,
+    @InjectRepository(Property)
+    private readonly propertyRepo: Repository<Property>,
     private readonly walletService: WalletService,
+    private readonly paymentService: PaymentService,
     private readonly configService: ConfigService,
   ) {}
 
@@ -240,5 +246,129 @@ export class TenantService {
       (Math.pow(1 + monthlyRate, months) - 1);
 
     return Math.round(monthlyPayment * 100) / 100;
+  }
+
+  async getAvailableRentals(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const maxLimit = Math.min(limit, 100);
+
+    const [properties, total] = await this.propertyRepo.findAndCount({
+      where: {
+        listingType: 'rent',
+        approved: true,
+      },
+      order: { createdAt: 'DESC' },
+      skip,
+      take: maxLimit,
+    });
+
+    return {
+      message: 'Available rental properties fetched successfully',
+      data: {
+        properties: properties.map(p => ({
+          id: p.id,
+          title: p.title,
+          type: p.type,
+          address: p.address,
+          description: p.description,
+          bedrooms: p.bedrooms,
+          bathrooms: p.bathrooms,
+          rentalPrice: p.rentalPrice,
+          serviceCharge: p.serviceCharge,
+          amenities: p.amenities,
+          images: p.images,
+          numberOfMonths: p.numberOfMonths,
+        })),
+        pagination: {
+          page,
+          limit: maxLimit,
+          total,
+          totalPages: Math.ceil(total / maxLimit),
+        },
+      },
+    };
+  }
+
+  async rentProperty(dto: RentPropertyDto, userId: string, userEmail: string) {
+    const property = await this.propertyRepo.findOne({
+      where: { id: dto.propertyId },
+    });
+
+    if (!property) {
+      throw new NotFoundException('Property not found');
+    }
+
+    if (property.listingType !== 'rent') {
+      throw new BadRequestException('This property is not available for rent');
+    }
+
+    if (!property.approved) {
+      throw new BadRequestException('Property not approved for rental');
+    }
+
+    if (!property.rentalPrice) {
+      throw new BadRequestException('Rental price not set for this property');
+    }
+
+    const totalAmount = Number(property.rentalPrice) * dto.duration;
+
+    if (dto.paymentMethod === PaymentMethod.WALLET) {
+      // Pay with wallet
+      await this.walletService.payWithWallet({
+        userId,
+        amountNaira: totalAmount,
+        reason: `Rent payment for ${property.title}`,
+        description: `${dto.duration} months rent for ${property.title}`,
+      });
+
+      // Record payment and create rental
+      await this.paymentService.recordWalletPayment({
+        userId,
+        propertyId: dto.propertyId,
+        investmentType: 'rent',
+        paymentType: 'one_time',
+        amount: totalAmount,
+        reference: `rent_${Date.now()}_${userId}`,
+        email: userEmail,
+        status: 'success',
+        paidAt: new Date().toISOString(),
+        rentDuration: dto.duration,
+      });
+
+      return {
+        message: 'Property rented successfully via wallet',
+        data: {
+          propertyId: property.id,
+          propertyTitle: property.title,
+          duration: dto.duration,
+          totalAmount,
+          paymentMethod: 'wallet',
+        },
+      };
+    } else {
+      // For card/bank payments, use existing payment gateway
+      const paymentPayload = {
+        propertyId: dto.propertyId,
+        investmentType: 'rent',
+        paymentType: 'one_time',
+        paymentOption: dto.paymentMethod,
+        numberOfMonths: dto.duration,
+        accountNumber: dto.accountNumber,
+        bankCode: dto.bankCode,
+      };
+
+      // This would redirect to payment gateway
+      return {
+        message: 'Redirect to payment gateway',
+        data: {
+          propertyId: property.id,
+          propertyTitle: property.title,
+          duration: dto.duration,
+          totalAmount,
+          paymentMethod: dto.paymentMethod,
+          redirectUrl: '/landlord/invest', // Use existing payment flow
+        },
+      };
+    }
   }
 }
