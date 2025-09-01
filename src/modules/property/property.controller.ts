@@ -84,6 +84,17 @@ export class PropertyController {
     return this.propertyService.getAllProperties(query);
   }
 
+  @Get('joint-ventures')
+  @ApiOperation({ summary: 'Get joint-venture property by status' })
+  @ApiResponse({
+    status: 200,
+    description: 'joint venture property by status found',
+    type: [Property],
+  })
+  async getProperties(@Query() filterDto: FilterPropertyDto) {
+    return this.propertyService.getPropertiesByCategory(filterDto.category);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get property by ID' })
   @ApiResponse({
@@ -93,6 +104,16 @@ export class PropertyController {
   })
   async findOne(@Param('id') id: string): Promise<Property> {
     return this.propertyService.findOne(id);
+  }
+
+  @Get(':id/renters')
+  @ApiOperation({ summary: 'Get list of renters for a rental property' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of property renters',
+  })
+  async getPropertyRenters(@Param('id') id: string) {
+    return this.propertyService.getPropertyRenters(id);
   }
 
   @Patch('renovation-request')
@@ -106,17 +127,6 @@ export class PropertyController {
     @Body() renovationRequestDto: RenovationRequestDto,
   ): Promise<Property> {
     return this.propertyService.renovationRequest(renovationRequestDto);
-  }
-
-  @ApiOperation({ summary: 'Get joint-venture property by status' })
-  @ApiResponse({
-    status: 200,
-    description: 'joint venture property by status found',
-    type: [Property],
-  })
-  @Get('joint-ventures')
-  async getProperties(@Query() filterDto: FilterPropertyDto) {
-    return this.propertyService.getPropertiesByCategory(filterDto.category);
   }
 
   @Patch(':id')

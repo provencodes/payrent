@@ -69,8 +69,7 @@ export class Property {
   @Column('decimal', { nullable: true, precision: 12, scale: 2 })
   rentalPrice: number; // per year
 
-  @Column({ nullable: false, default: false })
-  rented: boolean; // if true then it is not vacant.
+  // Removed single rented boolean - use rental records to track multiple renters
 
   @Column('decimal', { precision: 12, scale: 2, nullable: true })
   serviceCharge: number;
@@ -191,6 +190,18 @@ export class Property {
 
   @Column({ nullable: true })
   listedBy: string;
+
+  @Column({ nullable: false, default: false })
+  isSold: boolean;
+
+  @Column({ nullable: true })
+  soldAt: Date;
+
+  @Column('decimal', { precision: 12, scale: 2, nullable: true, default: 0 })
+  totalSharesSold: number;
+
+  @Column('decimal', { precision: 12, scale: 2, nullable: true, default: 0 })
+  totalInvestmentRaised: number;
 
   @CreateDateColumn()
   createdAt: Date;

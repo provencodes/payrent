@@ -19,6 +19,9 @@ import UserService from '../user/user.service';
 import UserIdentifierOptionsType from '../user/options/UserIdentifierOptions';
 import { VerifyAccountDto } from './dto/paystack.dto';
 import { CreatePlanType } from './gateways/gateway.interface';
+import { Rental } from '../property/entities/rental.entity';
+import { Property } from '../property/entities/property.entity';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class PaymentService {
@@ -33,20 +36,18 @@ export class PaymentService {
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     @InjectRepository(Plan) private readonly planRepo: Repository<Plan>,
+    @InjectRepository(Rental) private readonly rentalRepo: Repository<Rental>,
+    @InjectRepository(Property) private readonly propertyRepo: Repository<Property>,
+    private readonly dataSource: DataSource,
   ) {}
 
-  async landLordInvest(user, property, amount, dto) {
+  async landLordInvest(user, property, amount, dto, channels) {
     if (dto.paymentType === 'installment') {
       const planName = `${property.title}_${user.id}_${dto.investmentType}`;
       const planExist = await this.planRepo.findOne({
         where: { name: planName },
       });
       if (!planExist) {
-        // throw new NotFoundException({
-        //   success: false,
-        //   message: 'plan already exist',
-        // });
-
         const planData: CreatePlanType = {
           name: planName,
           interval: dto.paymentFrequency,
@@ -73,7 +74,7 @@ export class PaymentService {
           userId: user.id,
           propertyId: property.id,
           investmentType: dto.investmentType, // either buying shares or property
-          paymentType: dto.paymentType, // one_time || installment
+          paymentType: dto.paymentType, // installment
           numberOfMonth: dto?.numberOfMonths || null, // number of month, if instalment
           paymentFrequency: dto.paymentFrequency || null, // if one time = daily, weekly and monthly
         },
@@ -83,11 +84,12 @@ export class PaymentService {
       const pay = await this.paystack.initiatePayment({
         email: user.email,
         amount,
+        channels,
         metadata: {
           userId: user.id,
           propertyId: property.id,
           investmentType: dto.investmentType, // either buying shares or property
-          paymentType: dto.paymentType, // one_time || installment
+          paymentType: dto.paymentType, // one_time
           numberOfMonth: dto?.numberOfMonths || null, // number of month, if instalment
           shares: dto.shares || null, // amount of shares
           paymentFrequency: dto.paymentFrequency || null, // if one time = daily, weekly and monthly
@@ -255,9 +257,29 @@ export class PaymentService {
           reference,
           email: email,
           status: 'success',
-          paidAt: data.paid_at, //new Date(data.paid_at * 1000),
+          paidAt: data.paid_at,
           customerCode: data.customer.customer_code,
         });
+
+        // Update property based on investment type
+        await this.updatePropertyAfterPayment({
+          propertyId: metadata.propertyId,
+          userId: metadata.userId,
+          investmentType: metadata.investmentType,
+          amount: amount,
+          shares: metadata?.shares,
+        });
+
+        // Create rental record if it's a rent payment
+        if (metadata.investmentType === 'rent') {
+          await this.createRentalRecord({
+            userId: metadata.userId,
+            propertyId: metadata.propertyId,
+            rentAmount: amount,
+            paymentReference: reference,
+            rentDuration: metadata.numberOfMonth || 12,
+          });
+        }
       }
 
       if (metadata.paymentType === 'installment') {
@@ -296,7 +318,7 @@ export class PaymentService {
           status: 'active',
           nextPaymentDate: this.calculateNextDate(metadata.paymentFrequency),
           reference,
-          startedAt: data.paid_at, // new Date(data.paid_at * 1000),
+          startedAt: data.paid_at,
         });
 
         // Save successful payment to DB
@@ -396,7 +418,200 @@ export class PaymentService {
     return this.paystack.getBanks();
   }
 
+  async getPayWithBanks() {
+    return this.paystack.getPayWithBanks();
+  }
+
   async verifyAccount(query: VerifyAccountDto) {
     return this.paystack.verifyAccount(query.accountNumber, query.bankCode);
+  }
+
+  async recordWalletPayment(paymentData: {
+    userId: string;
+    propertyId: string;
+    investmentType: string;
+    paymentType: string;
+    shares?: number;
+    amount: number;
+    reference: string;
+    email: string;
+    status: string;
+    paidAt: string;
+    rentDuration?: number;
+  }) {
+    return await this.dataSource.transaction(async manager => {
+      const payment = await manager.save(Payment, {
+        userId: paymentData.userId,
+        propertyId: paymentData.propertyId,
+        investmentType: paymentData.investmentType,
+        shares: paymentData.shares,
+        amount: paymentData.amount,
+        reference: paymentData.reference,
+        email: paymentData.email,
+        status: paymentData.status,
+        paidAt: paymentData.paidAt,
+        customerCode: null,
+      });
+
+      // Update property based on investment type
+      await this.updatePropertyAfterPaymentWithManager(manager, {
+        propertyId: paymentData.propertyId,
+        userId: paymentData.userId,
+        investmentType: paymentData.investmentType,
+        amount: paymentData.amount,
+        shares: paymentData.shares,
+      });
+
+      // If this is a rental payment, create rental record
+      if (paymentData.investmentType === 'rent') {
+        await this.createRentalRecordWithManager(manager, {
+          userId: paymentData.userId,
+          propertyId: paymentData.propertyId,
+          rentAmount: paymentData.amount,
+          paymentReference: paymentData.reference,
+          rentDuration: paymentData.rentDuration || 12,
+        });
+      }
+
+      return payment;
+    });
+  }
+
+  async createRentalRecord(data: {
+    userId: string;
+    propertyId: string;
+    rentAmount: number;
+    paymentReference: string;
+    rentDuration: number;
+  }) {
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setMonth(startDate.getMonth() + data.rentDuration);
+
+    return await this.rentalRepo.save({
+      userId: data.userId,
+      propertyId: data.propertyId,
+      rentAmount: data.rentAmount,
+      paymentReference: data.paymentReference,
+      rentStartDate: startDate,
+      rentEndDate: endDate,
+      status: 'active',
+    });
+  }
+
+  async createRentalRecordWithManager(manager: any, data: {
+    userId: string;
+    propertyId: string;
+    rentAmount: number;
+    paymentReference: string;
+    rentDuration: number;
+  }) {
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setMonth(startDate.getMonth() + data.rentDuration);
+
+    return await manager.save(Rental, {
+      userId: data.userId,
+      propertyId: data.propertyId,
+      rentAmount: data.rentAmount,
+      paymentReference: data.paymentReference,
+      rentStartDate: startDate,
+      rentEndDate: endDate,
+      status: 'active',
+    });
+  }
+
+  async updatePropertyAfterPayment(data: {
+    propertyId: string;
+    userId: string;
+    investmentType: string;
+    amount: number;
+    shares?: number;
+  }) {
+    const property = await this.propertyRepo.findOne({ where: { id: data.propertyId } });
+    if (!property) return;
+
+    switch (data.investmentType) {
+      case 'property':
+      case 'sale':
+        property.isSold = true;
+        property.owner = data.userId;
+        property.soldAt = new Date();
+        break;
+
+      case 'shares':
+        property.totalSharesSold = Number(property.totalSharesSold || 0) + (data.shares || 0);
+        if (property.numberOfUnit && property.totalSharesSold >= property.numberOfUnit) {
+          property.isSold = true;
+          property.soldAt = new Date();
+        }
+        break;
+
+      case 'joint-venture':
+      case 'co-vest':
+        property.totalInvestmentRaised = Number(property.totalInvestmentRaised || 0) + data.amount;
+        if (property.investmentGoal && property.totalInvestmentRaised >= property.investmentGoal) {
+          property.status = 'funded';
+        }
+        break;
+
+      case 'rent':
+        break;
+
+      case 'flip':
+        property.isSold = true;
+        property.owner = data.userId;
+        property.soldAt = new Date();
+        break;
+    }
+
+    await this.propertyRepo.save(property);
+  }
+
+  async updatePropertyAfterPaymentWithManager(manager: any, data: {
+    propertyId: string;
+    userId: string;
+    investmentType: string;
+    amount: number;
+    shares?: number;
+  }) {
+    const property = await manager.findOne(Property, { where: { id: data.propertyId } });
+    if (!property) return;
+
+    switch (data.investmentType) {
+      case 'property':
+      case 'sale':
+        property.isSold = true;
+        property.owner = data.userId;
+        property.soldAt = new Date();
+        break;
+
+      case 'shares':
+        property.totalSharesSold = Number(property.totalSharesSold || 0) + (data.shares || 0);
+        if (property.numberOfUnit && property.totalSharesSold >= property.numberOfUnit) {
+          property.isSold = true;
+          property.soldAt = new Date();
+        }
+        break;
+
+      case 'joint-venture':
+      case 'co-vest':
+        property.totalInvestmentRaised = Number(property.totalInvestmentRaised || 0) + data.amount;
+        if (property.investmentGoal && property.totalInvestmentRaised >= property.investmentGoal) {
+          property.status = 'funded';
+        }
+        break;
+
+      case 'rent':
+        break;
+
+      case 'flip':
+        property.isSold = true;
+        property.owner = data.userId;
+        property.soldAt = new Date();
+        break;
+    }
+
+    await manager.save(property);
   }
 }

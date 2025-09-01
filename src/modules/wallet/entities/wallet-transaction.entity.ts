@@ -17,6 +17,8 @@ export type WalletTxReason =
   | 'referral_bonus';
 
 @Entity('wallet_transactions')
+@Index(['userId', 'type'])
+@Index(['walletId'])
 export class WalletTransaction {
   @PrimaryGeneratedColumn('uuid')
   id: string;

@@ -1,7 +1,7 @@
 // dto/initiate-payment.dto.ts
 import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { PaymentMethod } from '../enums/payment-method.enum';
-import { PaymentType } from '../enums/payment-type.enums';
+import { TransactionType } from '../enums/transaction-type';
 
 export class InitiatePaymentDto {
   @IsString()
@@ -14,8 +14,8 @@ export class InitiatePaymentDto {
   @IsEnum(PaymentMethod)
   method: PaymentMethod;
 
-  @IsEnum(PaymentType)
-  type: PaymentType;
+  @IsEnum(TransactionType)
+  type: TransactionType;
 
   @IsString()
   @IsNotEmpty()

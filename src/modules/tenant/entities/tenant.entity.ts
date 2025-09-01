@@ -1,46 +1,47 @@
-// import {
-//   Entity,
-//   PrimaryGeneratedColumn,
-//   Column,
-//   ManyToOne,
-//   CreateDateColumn,
-//   UpdateDateColumn,
-//   JoinColumn,
-//   OneToMany,
-// } from 'typeorm';
-// import { User } from 'src/modules/user/entities/user.entity';
-// import { WalletTransaction } from './wallet-transaction.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+  JoinColumn,
+} from 'typeorm';
+import { User } from '../../user/entities/user.entity';
 
-// @Entity('wallets')
-// export class Wallet {
-//   @PrimaryGeneratedColumn('uuid')
-//   id: string;
+@Entity('tenant_profiles')
+export class TenantProfile {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-//   @Column({ type: 'uuid' })
-//   userId: string;
+  @Column({ type: 'uuid' })
+  userId: string;
 
-//   @ManyToOne(() => User, (user) => user.wallet, { onDelete: 'CASCADE' })
-//   @JoinColumn({ name: 'userId' })
-//   user: User;
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' })
+  user: User;
 
-//   @Column('decimal', { precision: 12, scale: 2, default: 0 })
-//   balance: number;
+  @Column({ nullable: true })
+  employmentStatus: string;
 
-//   @Column('text', { nullable: true })
-//   paystackCustomerCode: string;
+  @Column('decimal', { precision: 12, scale: 2, nullable: true })
+  monthlyIncome: number;
 
-//   @Column('text', { nullable: true })
-//   paystackCustomerId: string;
+  @Column({ nullable: true })
+  currentAddress: string;
 
-//   @Column({ default: true })
-//   isActive: boolean;
+  @Column({ nullable: true })
+  emergencyContact: string;
 
-//   @OneToMany(() => WalletTransaction, (transaction) => transaction.wallet)
-//   transactions: WalletTransaction[];
+  @Column({ nullable: true })
+  emergencyPhone: string;
 
-//   @CreateDateColumn()
-//   createdAt: Date;
+  @Column({ default: true })
+  isActive: boolean;
 
-//   @UpdateDateColumn()
-//   updatedAt: Date;
-// }
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+}

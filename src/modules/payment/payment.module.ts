@@ -8,10 +8,12 @@ import { Payment } from './entities/payment.entity';
 import { Installment } from './entities/installment.entity';
 import { User } from '../user/entities/user.entity';
 import { Plan } from './entities/plan.entity';
+import { Rental } from '../property/entities/rental.entity';
+import { Property } from '../property/entities/property.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Payment, Installment, User, Plan]),
+    TypeOrmModule.forFeature([Payment, Installment, User, Plan, Rental, Property]),
     UserModule,
   ],
   controllers: [PaymentController],

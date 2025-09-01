@@ -88,6 +88,17 @@ export class PaymentController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'Get all banks' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of banks',
+  })
+  @Get('/all-banks/pay-with-bank')
+  async getPayWithBanks() {
+    return await this.paymentService.getPayWithBanks();
+  }
+
+  @Get()
   @ApiOperation({ summary: 'Verify a user account' })
   @ApiResponse({
     status: 200,

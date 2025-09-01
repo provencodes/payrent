@@ -14,7 +14,7 @@ export class LandlordController {
     summary: 'Initiate one-time or recurring commercial payment',
   })
   async initiatePayment(@Body() dto: CommercialDto, @Request() req) {
-    return await this.landlordService.initiatePayment(dto, req.user.id);
+    return await this.landlordService.initiatePayment(dto, req.user.sub);
   }
 
   @Post('joint-ventures')
@@ -22,6 +22,6 @@ export class LandlordController {
     summary: 'Initiate one-time or recurring commercial payment for renovation',
   })
   async initiatePaymentJoint(@Body() dto: JointVentureDto, @Request() req) {
-    return await this.landlordService.initiatePayment(dto, req.user.id);
+    return await this.landlordService.initiatePayment(dto, req.user.sub);
   }
 }

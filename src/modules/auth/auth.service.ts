@@ -34,6 +34,7 @@ import { GoogleAuthPayloadDto } from './dto/google-auth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { WalletTransaction } from '../wallet/entities/wallet-transaction.entity';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export default class AuthenticationService {
@@ -42,6 +43,7 @@ export default class AuthenticationService {
     private jwtService: JwtService,
     private emailService: EmailService,
     private readonly walletService: WalletService,
+    private readonly configService: ConfigService,
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(WalletTransaction)
     private walletTransactionRepository: Repository<WalletTransaction>,
@@ -131,7 +133,7 @@ export default class AuthenticationService {
           otp: hashedOtp,
           otpCooldownExpires,
           referralCode,
-          referredBy: referrer?.id || null,
+          referredBy: referrer || null,
         }),
       );
 
@@ -164,7 +166,7 @@ export default class AuthenticationService {
           const referrerWallet = await this.walletService.getOrCreateWallet(
             referrer.id,
           );
-          const bonusAmount = 25000; // 250 naira in kobo
+          const bonusAmount = this.configService.get('finance.referralBonusKobo');
 
           // Credit the referrer's wallet
           referrerWallet.balanceKobo = (

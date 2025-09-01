@@ -6,9 +6,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Property } from '../property/entities/property.entity';
 import { UserModule } from '../user/user.module';
 import { PaystackGateway } from '../payment/gateways/paystack.gateway';
+import { WalletModule } from '../wallet/wallet.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Property]), PaymentModule, UserModule],
+  imports: [TypeOrmModule.forFeature([Property]), PaymentModule, UserModule, WalletModule],
   controllers: [LandlordController],
   providers: [LandlordService, PaystackGateway],
 })

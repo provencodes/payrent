@@ -70,4 +70,13 @@ export class SaveRentDto {
   estimatedReturn: number;
 }
 
+export class FundSavingsDto {
+  @ApiProperty({
+    example: 5000,
+    description: 'Amount to contribute to savings',
+  })
+  @IsNumber()
+  amount: number;
+}
+
 // export class UpdateTenantDto extends PartialType(CreateTenantDto) {}

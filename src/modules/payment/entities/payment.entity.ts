@@ -4,9 +4,13 @@ import {
   Column,
   PrimaryGeneratedColumn,
   CreateDateColumn,
+  Index,
 } from 'typeorm';
 
 @Entity()
+@Index(['userId', 'status'])
+@Index(['propertyId'])
+@Index(['reference'])
 export class Payment {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -17,13 +21,13 @@ export class Payment {
   @Column()
   propertyId: string;
 
-  @Column()
+  @Column({ nullable: true })
   investmentType?: string;
 
-  @Column()
+  @Column({ nullable: true })
   shares?: number;
 
-  @Column({ type: 'date', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   paidAt?: Date;
 
   @Column()
@@ -32,8 +36,8 @@ export class Payment {
   @Column()
   email: string;
 
-  @Column()
-  customerCode: string;
+  @Column({ nullable: true })
+  customerCode?: string;
 
   @Column('decimal', { precision: 10, scale: 2 })
   amount: number;

@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Wallet } from './entities/wallet.entity';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import {
   FundWalletDto,
   PayWithWalletDto,
@@ -23,6 +23,7 @@ export class WalletService {
     @InjectRepository(WalletTransaction)
     private readonly walletTransactionRepository: Repository<WalletTransaction>,
     private readonly paystack: PaystackGateway,
+    private readonly dataSource: DataSource,
   ) {}
 
   async getOrCreateWallet(userId: string) {
@@ -97,30 +98,33 @@ export class WalletService {
   async payWithWallet(payWithWalletDto: PayWithWalletDto) {
     const { userId, amountNaira, reason } = payWithWalletDto;
 
-    const wallet = await this.walletRepository.findOne({ where: { userId } });
-    if (!wallet) throw new NotFoundException('Wallet not found');
+    return await this.dataSource.transaction(async manager => {
+      const wallet = await manager.findOne(Wallet, { where: { userId } });
+      if (!wallet) throw new NotFoundException('Wallet not found');
 
-    const amountKobo = amountNaira * 100;
-    if (Number(wallet.balanceKobo) < amountKobo) {
-      throw new BadRequestException('Insufficient wallet balance');
-    }
+      const amountKobo = amountNaira * 100;
+      if (Number(wallet.balanceKobo) < amountKobo) {
+        throw new BadRequestException('Insufficient wallet balance');
+      }
 
-    wallet.balanceKobo = (Number(wallet.balanceKobo) - amountKobo).toString();
-    const updatedWallet = await this.walletRepository.save(wallet);
+      wallet.balanceKobo = (Number(wallet.balanceKobo) - amountKobo).toString();
+      const updatedWallet = await manager.save(wallet);
 
-    await this.logTransaction({
-      userId,
-      walletId: wallet.id,
-      type: 'debit',
-      amountKobo: amountKobo.toString(),
-      reason,
+      const transaction = manager.create(WalletTransaction, {
+        userId,
+        walletId: wallet.id,
+        type: 'debit',
+        amountKobo: amountKobo.toString(),
+        reason: reason as any,
+      });
+      await manager.save(transaction);
+
+      return {
+        message: 'Payment successful',
+        balanceKobo: updatedWallet.balanceKobo,
+        reason,
+      };
     });
-
-    return {
-      message: 'Payment successful',
-      balanceKobo: updatedWallet.balanceKobo,
-      reason,
-    };
   }
 
   async getWallet(userId: string) {

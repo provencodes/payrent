@@ -8,15 +8,16 @@ import {
   Min,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { PaymentType } from 'src/modules/property/dto/create-property.dto';
 
 export enum InvestType {
   SHARES = 'shares',
-  APARTMENT = 'property',
-}
-
-export enum PaymentType {
-  ONE_TIME = 'one_time',
-  INSTALLMENT = 'installment',
+  PROPERTY = 'property',
+  SALE = 'sale',
+  RENT = 'rent',
+  JOINT_VENTURE = 'joint-venture',
+  CO_VEST = 'co-vest',
+  FLIP = 'flip',
 }
 
 export enum PaymentFrequency {
@@ -25,7 +26,21 @@ export enum PaymentFrequency {
   MONTHLY = 'monthly',
 }
 
+export enum PaymentOption {
+  CARD = 'card',
+  WALLET = 'wallet',
+  TRANSFER = 'transfer',
+  BANK = 'bank',
+}
+
 export class CommercialDto {
+  @ApiProperty({
+    enum: PaymentOption,
+    example: PaymentOption.CARD,
+    description: 'Payment option: card, wallet, or transfer',
+  })
+  paymentOption: PaymentOption;
+
   @ApiProperty({
     enum: InvestType,
     example: InvestType.SHARES,
@@ -81,6 +96,22 @@ export class CommercialDto {
     message: 'paymentFrequency must be one of "daily", "weekly", or "monthly"',
   })
   paymentFrequency?: PaymentFrequency;
+
+  @ApiPropertyOptional({
+    example: '0108696089',
+    description: 'User account number',
+  })
+  @IsOptional()
+  @IsString()
+  accountNumber: string;
+
+  @ApiPropertyOptional({
+    example: '063',
+    description: 'Bank code of the selected bank',
+  })
+  @IsOptional()
+  @IsString()
+  bankCode: string;
 }
 
 export class JointVentureDto {
@@ -107,6 +138,13 @@ export class JointVentureDto {
   })
   paymentType: string;
 
+  @ApiProperty({
+    enum: PaymentOption,
+    example: PaymentOption.CARD,
+    description: 'Payment option: card, wallet, or transfer',
+  })
+  paymentOption: PaymentOption;
+
   @ApiPropertyOptional({
     example: 'monthly',
     description: 'Frequency of automatic charges (used if installment)',
@@ -115,7 +153,7 @@ export class JointVentureDto {
   @IsEnum(PaymentFrequency, {
     message: 'paymentFrequency must be one of "daily", "weekly", or "monthly"',
   })
-  paymentFrequency: string;
+  paymentFrequency: PaymentFrequency;
 
   @ApiProperty({
     example: 'joint-venture',
@@ -123,4 +161,20 @@ export class JointVentureDto {
   })
   @IsString()
   investmentType: string;
+
+  @ApiPropertyOptional({
+    example: '0108696089',
+    description: 'User account number',
+  })
+  @IsOptional()
+  @IsString()
+  accountNumber: string;
+
+  @ApiPropertyOptional({
+    example: '063',
+    description: 'Bank code of the selected bank',
+  })
+  @IsOptional()
+  @IsString()
+  bankCode: string;
 }

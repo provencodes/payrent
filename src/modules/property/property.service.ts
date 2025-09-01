@@ -13,11 +13,14 @@ import { GetAllPropertyDto } from './dto/property-response.dto';
 import { GetPropertiesDto, PropertyCategory } from './dto/property.dto';
 import { ListingType } from './dto/create-property.dto';
 import { RenovationRequestDto } from './dto/renovation-request.dto';
+import { Rental } from './entities/rental.entity';
 @Injectable()
 export class PropertyService {
   constructor(
     @InjectRepository(Property)
     private readonly propertyRepository: Repository<Property>,
+    @InjectRepository(Rental)
+    private readonly rentalRepository: Repository<Rental>,
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
@@ -219,12 +222,7 @@ export class PropertyService {
   async getMetrics(userId: string) {
     const qb = this.propertyRepository.createQueryBuilder('property');
 
-    const [
-      totalProperties,
-      soldProperties,
-      rentedProperties,
-      vacantProperties,
-    ] = await Promise.all([
+    const [totalProperties, soldProperties] = await Promise.all([
       qb.clone().where('property.listedBy = :userId', { userId }).getCount(),
       qb
         .clone()
@@ -234,23 +232,25 @@ export class PropertyService {
         })
         .andWhere('property.owner IS NOT NULL')
         .getCount(),
-      qb
-        .clone()
-        .where('property.listedBy = :userId', { userId })
-        .andWhere('property.listingType = :listingType', {
-          listingType: 'rent',
-        })
-        .andWhere('property.rented = :rented', { rented: true })
-        .getCount(),
-      qb
-        .clone()
-        .where('property.listedBy = :userId', { userId })
-        .andWhere('property.listingType = :listingType', {
-          listingType: 'rent',
-        })
-        .andWhere('property.rented = :rented', { rented: false })
-        .getCount(),
     ]);
+
+    // Get rental properties with active renters
+    const rentalPropertiesWithRenters = await this.propertyRepository
+      .createQueryBuilder('property')
+      .leftJoin('rentals', 'rental', 'rental.propertyId = property.id AND rental.status = :status', { status: 'active' })
+      .where('property.listedBy = :userId', { userId })
+      .andWhere('property.listingType = :listingType', { listingType: 'rent' })
+      .select(['property.id', 'COUNT(rental.id) as renterCount'])
+      .groupBy('property.id')
+      .getRawMany();
+
+    const rentedProperties = rentalPropertiesWithRenters.filter(p => parseInt(p.renterCount) > 0).length;
+    const totalRentalProperties = await qb
+      .clone()
+      .where('property.listedBy = :userId', { userId })
+      .andWhere('property.listingType = :listingType', { listingType: 'rent' })
+      .getCount();
+    const vacantProperties = totalRentalProperties - rentedProperties;
 
     return {
       message: 'Properties fetched successfully',
@@ -264,7 +264,7 @@ export class PropertyService {
   }
 
   async getPropertiesByCategory(
-    category: PropertyCategory,
+    category?: PropertyCategory,
   ): Promise<{ message: string; data: Property[] }> {
     let statuses: PropertyStatus[];
 
@@ -275,19 +275,28 @@ export class PropertyService {
         PropertyStatus.APPROVED,
         PropertyStatus.REJECTED,
       ];
-    } else {
+    } else if (category === PropertyCategory.CATEGORY2) {
       statuses = [
         PropertyStatus.CANCELLED,
         PropertyStatus.ONGOING,
         PropertyStatus.COMPLETED,
       ];
+    } else {
+      // If no category provided, return all joint-venture properties
+      const properties = await this.propertyRepository.find({
+        where: { listingType: 'joint-venture' },
+      });
+      return {
+        message: 'Properties fetched successfully',
+        data: properties,
+      };
     }
     const properties = await this.propertyRepository
       .createQueryBuilder('property')
       .where('property.listingType = :listingType', {
         listingType: 'joint-venture',
       })
-      .andWhere('property.status @> ARRAY[:...statuses]', { statuses })
+      .andWhere('property.status IN (:...statuses)', { statuses })
       .getMany();
 
     return {
@@ -310,6 +319,49 @@ export class PropertyService {
     return {
       message: 'Properties fetched successfully',
       data: property,
+    };
+  }
+
+  async getPropertyRenters(propertyId: string) {
+    const property = await this.findOne(propertyId);
+    
+    if (property.listingType !== 'rent') {
+      throw new BadRequestException('This property is not available for rent');
+    }
+
+    const renters = await this.rentalRepository.find({
+      where: { propertyId },
+      relations: ['user'],
+      select: {
+        id: true,
+        rentAmount: true,
+        rentStartDate: true,
+        rentEndDate: true,
+        status: true,
+        createdAt: true,
+        user: {
+          id: true,
+          name: true,
+          email: true,
+          profilePicture: true,
+        },
+      },
+      order: { createdAt: 'DESC' },
+    });
+
+    return {
+      message: 'Property renters fetched successfully',
+      data: {
+        property: {
+          id: property.id,
+          title: property.title,
+          address: property.address,
+          rentalPrice: property.rentalPrice,
+        },
+        totalRenters: renters.length,
+        activeRenters: renters.filter(r => r.status === 'active').length,
+        renters,
+      },
     };
   }
 }
