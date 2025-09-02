@@ -265,7 +265,7 @@ export class TenantService {
     return {
       message: 'Available rental properties fetched successfully',
       data: {
-        properties: properties.map(p => ({
+        properties: properties.map((p) => ({
           id: p.id,
           title: p.title,
           type: p.type,
@@ -290,6 +290,7 @@ export class TenantService {
   }
 
   async rentProperty(dto: RentPropertyDto, userId: string, userEmail: string) {
+    let channels;
     const property = await this.propertyRepo.findOne({
       where: { id: dto.propertyId },
     });
@@ -345,8 +346,15 @@ export class TenantService {
           paymentMethod: 'wallet',
         },
       };
-    } else {
-      // For card/bank payments, use existing payment gateway
+    } else if (dto.paymentMethod === PaymentMethod.BANK) {
+      if (!dto.accountNumber || !dto.bankCode) {
+        throw new BadRequestException(
+          'Account number and bank code are required',
+        );
+      }
+
+      channels = ['bank'];
+
       const paymentPayload = {
         propertyId: dto.propertyId,
         investmentType: 'rent',

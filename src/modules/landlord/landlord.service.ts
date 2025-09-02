@@ -149,7 +149,8 @@ export class LandlordService {
         email: user.email,
         status: 'success',
         paidAt: new Date().toISOString(),
-        rentDuration: dto.investmentType === 'rent' ? (dto.numberOfMonths || 12) : undefined,
+        rentDuration:
+          dto.investmentType === 'rent' ? dto.numberOfMonths || 12 : undefined,
       });
 
       return {

@@ -17,7 +17,11 @@ export class GetPropertiesDto {
   @IsString()
   listedBy?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() owner?: string;
-  @ApiPropertyOptional() @IsOptional() @IsBoolean() approved?: boolean;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
+  approved?: boolean;
   @ApiPropertyOptional() @IsOptional() @IsString() renovationType?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() constructionStatus?: string;
   @ApiPropertyOptional({
@@ -31,7 +35,11 @@ export class GetPropertiesDto {
   @IsOptional()
   @Type(() => Number)
   interestRate?: number;
-  @ApiPropertyOptional() @IsOptional() @IsBoolean() agreeToTerms?: boolean;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
+  agreeToTerms?: boolean;
   @ApiPropertyOptional() @IsOptional() @Type(() => Number) rentalPrice?: number;
   @ApiPropertyOptional() @IsOptional() @IsString() floorLevel?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() address?: string;

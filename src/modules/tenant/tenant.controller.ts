@@ -99,10 +99,7 @@ export class TenantController {
     status: 200,
     description: 'Available rental properties fetched successfully',
   })
-  getAvailableRentals(
-    @Query('page') page = 1,
-    @Query('limit') limit = 20,
-  ) {
+  getAvailableRentals(@Query('page') page = 1, @Query('limit') limit = 20) {
     return this.tenantService.getAvailableRentals(Number(page), Number(limit));
   }
 

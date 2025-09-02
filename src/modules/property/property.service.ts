@@ -29,8 +29,17 @@ export class PropertyService {
       throw new NotFoundException(
         'Price per share is required for shares listing',
       );
-    } else if (dto.listingType === ListingType.RENT && !dto.rentalPrice) {
-      throw new NotFoundException('Rental price is required for rent listing');
+    } else if (
+      dto.listingType === ListingType.RENT &&
+      (!dto.rentalPrice ||
+        !dto.rentalPrice ||
+        !dto.serviceCharge ||
+        !dto.legalAndAdministrativeFee ||
+        !dto.agentCommission)
+    ) {
+      throw new NotFoundException(
+        'Rental price, service charge, legal fee and agent commission is required for rent listing',
+      );
     } else if (dto.listingType === ListingType.SALE) {
       if (!dto.price && !(dto.numberOfUnit && dto.pricePerUnit)) {
         throw new NotFoundException(
@@ -237,14 +246,21 @@ export class PropertyService {
     // Get rental properties with active renters
     const rentalPropertiesWithRenters = await this.propertyRepository
       .createQueryBuilder('property')
-      .leftJoin('rentals', 'rental', 'rental.propertyId = property.id AND rental.status = :status', { status: 'active' })
+      .leftJoin(
+        'rentals',
+        'rental',
+        'rental.propertyId = property.id AND rental.status = :status',
+        { status: 'active' },
+      )
       .where('property.listedBy = :userId', { userId })
       .andWhere('property.listingType = :listingType', { listingType: 'rent' })
       .select(['property.id', 'COUNT(rental.id) as renterCount'])
       .groupBy('property.id')
       .getRawMany();
 
-    const rentedProperties = rentalPropertiesWithRenters.filter(p => parseInt(p.renterCount) > 0).length;
+    const rentedProperties = rentalPropertiesWithRenters.filter(
+      (p) => parseInt(p.renterCount) > 0,
+    ).length;
     const totalRentalProperties = await qb
       .clone()
       .where('property.listedBy = :userId', { userId })
@@ -324,7 +340,7 @@ export class PropertyService {
 
   async getPropertyRenters(propertyId: string) {
     const property = await this.findOne(propertyId);
-    
+
     if (property.listingType !== 'rent') {
       throw new BadRequestException('This property is not available for rent');
     }
@@ -359,7 +375,7 @@ export class PropertyService {
           rentalPrice: property.rentalPrice,
         },
         totalRenters: renters.length,
-        activeRenters: renters.filter(r => r.status === 'active').length,
+        activeRenters: renters.filter((r) => r.status === 'active').length,
         renters,
       },
     };
@@ -381,8 +397,9 @@ export class PropertyService {
     const qb = this.propertyRepository.createQueryBuilder('property');
 
     // Filter for rental properties only
-    qb.where('property.listingType = :listingType', { listingType: 'rent' })
-      .andWhere('property.approved = :approved', { approved: true });
+    qb.where('property.listingType = :listingType', {
+      listingType: 'rent',
+    }).andWhere('property.approved = :approved', { approved: true });
 
     // Apply other filters
     Object.entries(filters).forEach(([key, value]) => {

@@ -1,10 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsUUID, IsNumber, IsEnum, IsOptional, Min, Max } from 'class-validator';
+import {
+  IsUUID,
+  IsNumber,
+  IsEnum,
+  IsOptional,
+  Min,
+  Max,
+} from 'class-validator';
 
 export enum PaymentMethod {
   CARD = 'card',
   WALLET = 'wallet',
   BANK_TRANSFER = 'bank_transfer',
+  BANK = 'bank',
 }
 
 export class RentPropertyDto {
