@@ -50,6 +50,8 @@ export class TenantService {
       );
     }
 
+    // TODO GET THE MONEY FROM THE USER IN ALL THE FOUR OPTION
+
     const rentSavings = this.rentSavingsRepo.create({
       userId,
       monthlyAmount: dto.amount,
@@ -71,6 +73,7 @@ export class TenantService {
 
   async applyForLoan(dto: ApplyLoanDto, userId: string) {
     // Calculate loan terms
+    // TODO  COLLECT THE MONEY
     const interestRate = this.calculateInterestRate(
       dto.loanAmount,
       dto.repaymentPeriod,

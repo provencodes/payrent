@@ -92,7 +92,7 @@ export class LandlordService {
         dto,
         channels,
       );
-      console.log(res);
+      console.log('payment initiation response: ', res);
       return {
         authorization_url: res.authorization_url,
         reference: res.reference,

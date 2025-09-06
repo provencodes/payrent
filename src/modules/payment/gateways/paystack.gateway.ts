@@ -33,9 +33,10 @@ export class PaystackGateway {
         },
         { headers: this.headers },
       );
-
+      console.log('Paystack initiation response:', response.data);
       return response.data;
     } catch (error) {
+      console.error(error);
       throw new HttpException('Paystack initiation failed', 500);
     }
   }

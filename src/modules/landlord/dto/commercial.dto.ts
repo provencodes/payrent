@@ -39,6 +39,9 @@ export class CommercialDto {
     example: PaymentOption.CARD,
     description: 'Payment option: card, wallet, or transfer',
   })
+  @IsEnum(PaymentOption, {
+    message: 'payment option can either be card, wallet, bank or transfer',
+  })
   paymentOption: PaymentOption;
 
   @ApiProperty({

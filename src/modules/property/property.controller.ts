@@ -142,42 +142,23 @@ export class PropertyController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a property' })
-  // @UseInterceptors(
-  //   FilesInterceptor('images', 5, {
-  //     ...multerOptions,
-  //     fileFilter,
-  //   }),
-  // )
-  // @ApiConsumes('multipart/form-data')
   @ApiBody({
-    description: 'Update property with optional new images',
+    description: 'Update property',
     type: UpdatePropertyDto,
   })
   @ApiResponse({ status: 200, description: 'Property updated', type: Property })
   async update(
     @Param('id') id: string,
-    // @UploadedFiles() files: Express.Multer.File[],
     @Body() updatePropertyDto: UpdatePropertyDto,
-  ): Promise<Property> {
-    // let newImages = [];
-    // if (files && files.length > 0) {
-    //   // Optionally delete old images
-    //   // const existing = await this.propertyService.findOne(id);
-    //   // const publicIds = existing.images?.map((i) => i.public_id) || [];
-    //   // if (publicIds.length) {
-    //   //   await this.cloudinaryService.deleteMultipleImages(publicIds);
-    //   // }
-
-    //   const uploads = await this.cloudinaryService.uploadMultipleImages(files);
-    //   newImages = uploads.map((u) => ({
-    //     url: u.secure_url,
-    //     public_id: u.public_id,
-    //   }));
-    // }
-
-    return this.propertyService.update(id, {
-      ...updatePropertyDto,
-    });
+  ): Promise<{ message: string; data: Property }> {
+    const updatedProperty = await this.propertyService.update(
+      id,
+      updatePropertyDto,
+    );
+    return {
+      message: 'Property updated successfully',
+      data: updatedProperty,
+    };
   }
 
   @Delete(':id')
