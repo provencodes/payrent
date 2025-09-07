@@ -9,12 +9,12 @@ import { SaveRentDto } from './dto/tenant.dto';
 import { ApplyLoanDto } from './dto/loan.dto';
 import { RentPropertyDto, PaymentMethod } from './dto/rent-property.dto';
 import { Property } from '../property/entities/property.entity';
-import { PaymentService } from '../payment/payment.service';
 import { RentSavings } from './entities/rent-savings.entity';
 import { LoanApplication } from './entities/loan-application.entity';
 import { Rental } from '../property/entities/rental.entity';
-import { WalletService } from '../wallet/wallet.service';
 import { ConfigService } from '@nestjs/config';
+import { PaymentProcessorService } from '../../shared/services/payment-processor.service';
+import { PaymentOption } from '../landlord/dto/commercial.dto';
 
 @Injectable()
 export class TenantService {
@@ -27,12 +27,11 @@ export class TenantService {
     private readonly rentalRepo: Repository<Rental>,
     @InjectRepository(Property)
     private readonly propertyRepo: Repository<Property>,
-    private readonly walletService: WalletService,
-    private readonly paymentService: PaymentService,
+    private readonly paymentProcessor: PaymentProcessorService,
     private readonly configService: ConfigService,
   ) {}
 
-  async createRentSavings(dto: SaveRentDto, userId: string) {
+  async createRentSavings(dto: SaveRentDto, userId: string, userEmail: string) {
     if (
       !(dto.amount || dto.duration || dto.totalSavingsGoal || dto.maturityDate)
     ) {
@@ -50,7 +49,21 @@ export class TenantService {
       );
     }
 
-    // TODO GET THE MONEY FROM THE USER IN ALL THE FOUR OPTION
+    const paymentRequest = {
+      userId,
+      userEmail,
+      amount: dto.amount,
+      paymentOption: dto.paymentOption || PaymentOption.WALLET,
+      accountNumber: dto.accountNumber,
+      bankCode: dto.bankCode,
+      reason: 'Rent savings plan creation',
+      description: `Initial payment for rent savings plan - ₦${dto.amount}`,
+    };
+
+    const paymentResult = await this.paymentProcessor.processPayment(
+      paymentRequest,
+      { email: userEmail },
+    );
 
     const rentSavings = this.rentSavingsRepo.create({
       userId,
@@ -61,13 +74,14 @@ export class TenantService {
       interestRate: dto.interestRate,
       estimatedReturn: dto.estimatedReturn,
       automation: dto.automation,
+      currentSavings: paymentResult.success ? dto.amount : 0,
     });
 
     const saved = await this.rentSavingsRepo.save(rentSavings);
 
     return {
       message: 'Rent savings plan created successfully',
-      data: saved,
+      data: { ...saved, paymentResult },
     };
   }
 
@@ -183,7 +197,15 @@ export class TenantService {
     };
   }
 
-  async fundRentSavings(savingsId: string, userId: string, amount: number) {
+  async fundRentSavings(
+    savingsId: string,
+    userId: string,
+    userEmail: string,
+    amount: number,
+    paymentOption: PaymentOption,
+    accountNumber?: string,
+    bankCode?: string,
+  ) {
     const savings = await this.rentSavingsRepo.findOne({
       where: { id: savingsId, userId },
     });
@@ -196,23 +218,31 @@ export class TenantService {
       throw new BadRequestException('Savings plan is not active');
     }
 
-    // Deduct from wallet
-    await this.walletService.payWithWallet({
+    const paymentRequest = {
       userId,
-      amountNaira: amount,
+      userEmail,
+      amount,
+      paymentOption,
+      accountNumber,
+      bankCode,
       reason: 'Rent savings contribution',
-      description: `Contribution to rent savings plan`,
-    });
+      description: `Contribution to rent savings plan - ₦${amount}`,
+    };
 
-    // Update savings
-    savings.currentSavings = Number(savings.currentSavings) + amount;
+    const paymentResult = await this.paymentProcessor.processPayment(
+      paymentRequest,
+      { email: userEmail },
+    );
 
-    // Check if goal is reached
-    if (savings.currentSavings >= savings.totalSavingsGoal) {
-      savings.status = 'completed';
+    if (paymentResult.success) {
+      savings.currentSavings = Number(savings.currentSavings) + amount;
+
+      if (savings.currentSavings >= savings.totalSavingsGoal) {
+        savings.status = 'completed';
+      }
+
+      await this.rentSavingsRepo.save(savings);
     }
-
-    await this.rentSavingsRepo.save(savings);
 
     return {
       message: 'Rent savings funded successfully',
@@ -221,6 +251,7 @@ export class TenantService {
         totalSavingsGoal: savings.totalSavingsGoal,
         progress: (savings.currentSavings / savings.totalSavingsGoal) * 100,
         status: savings.status,
+        paymentResult,
       },
     };
   }
@@ -293,7 +324,6 @@ export class TenantService {
   }
 
   async rentProperty(dto: RentPropertyDto, userId: string, userEmail: string) {
-    let channels;
     const property = await this.propertyRepo.findOne({
       where: { id: dto.propertyId },
     });
@@ -316,70 +346,45 @@ export class TenantService {
 
     const totalAmount = Number(property.rentalPrice) * dto.duration;
 
-    if (dto.paymentMethod === PaymentMethod.WALLET) {
-      // Pay with wallet
-      await this.walletService.payWithWallet({
-        userId,
-        amountNaira: totalAmount,
-        reason: `Rent payment for ${property.title}`,
-        description: `${dto.duration} months rent for ${property.title}`,
-      });
+    const paymentOptionMap = {
+      [PaymentMethod.WALLET]: PaymentOption.WALLET,
+      [PaymentMethod.BANK]: PaymentOption.BANK,
+      [PaymentMethod.CARD]: PaymentOption.CARD,
+      [PaymentMethod.TRANSFER]: PaymentOption.TRANSFER,
+    };
 
-      // Record payment and create rental
-      await this.paymentService.recordWalletPayment({
-        userId,
-        propertyId: dto.propertyId,
-        investmentType: 'rent',
-        paymentType: 'one_time',
-        amount: totalAmount,
-        reference: `rent_${Date.now()}_${userId}`,
-        email: userEmail,
-        status: 'success',
-        paidAt: new Date().toISOString(),
-        rentDuration: dto.duration,
-      });
+    const paymentRequest = {
+      userId,
+      userEmail,
+      amount: totalAmount,
+      paymentOption: paymentOptionMap[dto.paymentMethod],
+      propertyId: dto.propertyId,
+      investmentType: 'rent',
+      paymentType: 'one_time',
+      numberOfMonths: dto.duration,
+      accountNumber: dto.accountNumber,
+      bankCode: dto.bankCode,
+      reason: `Rent payment for ${property.title}`,
+      description: `${dto.duration} months rent for ${property.title}`,
+    };
 
-      return {
-        message: 'Property rented successfully via wallet',
-        data: {
-          propertyId: property.id,
-          propertyTitle: property.title,
-          duration: dto.duration,
-          totalAmount,
-          paymentMethod: 'wallet',
-        },
-      };
-    } else if (dto.paymentMethod === PaymentMethod.BANK) {
-      if (!dto.accountNumber || !dto.bankCode) {
-        throw new BadRequestException(
-          'Account number and bank code are required',
-        );
-      }
+    const paymentResult = await this.paymentProcessor.processPayment(
+      paymentRequest,
+      { email: userEmail },
+      property,
+    );
 
-      channels = ['bank'];
-
-      const paymentPayload = {
-        propertyId: dto.propertyId,
-        investmentType: 'rent',
-        paymentType: 'one_time',
-        paymentOption: dto.paymentMethod,
-        numberOfMonths: dto.duration,
-        accountNumber: dto.accountNumber,
-        bankCode: dto.bankCode,
-      };
-
-      // This would redirect to payment gateway
-      return {
-        message: 'Redirect to payment gateway',
-        data: {
-          propertyId: property.id,
-          propertyTitle: property.title,
-          duration: dto.duration,
-          totalAmount,
-          paymentMethod: dto.paymentMethod,
-          redirectUrl: '/landlord/invest', // Use existing payment flow
-        },
-      };
-    }
+    return {
+      message: paymentResult.success
+        ? 'Property rented successfully'
+        : 'Payment initiated',
+      data: {
+        propertyId: property.id,
+        propertyTitle: property.title,
+        duration: dto.duration,
+        totalAmount,
+        paymentResult,
+      },
+    };
   }
 }

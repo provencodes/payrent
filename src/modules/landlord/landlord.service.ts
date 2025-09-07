@@ -4,25 +4,20 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-// import { CommercialDto, PaymentOption } from './dto/commercial.dto';
 import { Property } from '../property/entities/property.entity';
 import { Repository } from 'typeorm';
-import { PaymentService } from '../payment/payment.service';
 import UserService from '../user/user.service';
-import { PaystackGateway } from '../payment/gateways/paystack.gateway';
 import { PaymentOption } from './dto/commercial.dto';
 import { PaymentType } from '../property/dto/create-property.dto';
-import { WalletService } from '../wallet/wallet.service';
+import { PaymentProcessorService } from '../../shared/services/payment-processor.service';
 
 @Injectable()
 export class LandlordService {
   constructor(
     @InjectRepository(Property)
     private readonly propertyRepository: Repository<Property>,
-    private readonly paymentService: PaymentService,
     private readonly userService: UserService,
-    private readonly paystack: PaystackGateway,
-    private readonly walletService: WalletService,
+    private readonly paymentProcessor: PaymentProcessorService,
   ) {}
   async initiatePayment(dto: any, userId: string) {
     if (
@@ -79,89 +74,27 @@ export class LandlordService {
     }
 
     const user = await this.userService.getUserById(userId);
-
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    let channels = ['card'];
-    if (dto.paymentOption === PaymentOption.CARD) {
-      const res = await this.paymentService.landLordInvest(
-        user,
-        property,
-        amount,
-        dto,
-        channels,
-      );
-      console.log('payment initiation response: ', res);
-      return {
-        authorization_url: res.authorization_url,
-        reference: res.reference,
-      };
-    } else if (dto.paymentOption === PaymentOption.BANK) {
-      if (!dto.accountNumber || !dto.bankCode) {
-        throw new BadRequestException(
-          'Account number and bank code are required',
-        );
-      }
-      channels = ['bank'];
-      const res = await this.paymentService.landLordInvest(
-        user,
-        property,
-        amount,
-        dto,
-        channels,
-      );
-      return {
-        authorization_url: res.authorization_url,
-        reference: res.reference,
-      };
-    } else if (dto.paymentOption === PaymentOption.TRANSFER) {
-      channels = ['bank_transfer'];
-      const res = await this.paymentService.landLordInvest(
-        user,
-        property,
-        amount,
-        dto,
-        channels,
-      );
-      return {
-        authorization_url: res.authorization_url,
-        reference: res.reference,
-      };
-    } else if (dto.paymentOption === PaymentOption.WALLET) {
-      // Handle wallet payment
-      const paymentResult = await this.walletService.payWithWallet({
-        userId,
-        amountNaira: amount,
-        reason: `Investment in ${property.title}`,
-        description: `${dto.investmentType} investment - ${dto.shares ? `${dto.shares} shares` : `₦${amount}`}`,
-      });
 
-      // Record the payment in the payment system
-      await this.paymentService.recordWalletPayment({
-        userId,
-        propertyId: dto.propertyId,
-        investmentType: dto.investmentType,
-        paymentType: dto.paymentType,
-        shares: dto.shares || null,
-        amount,
-        reference: `wallet_${Date.now()}_${userId}`,
-        email: user.email,
-        status: 'success',
-        paidAt: new Date().toISOString(),
-        rentDuration:
-          dto.investmentType === 'rent' ? dto.numberOfMonths || 12 : undefined,
-      });
+    const paymentRequest = {
+      userId,
+      userEmail: user.email,
+      amount,
+      paymentOption: dto.paymentOption,
+      propertyId: dto.propertyId,
+      investmentType: dto.investmentType,
+      paymentType: dto.paymentType,
+      shares: dto.shares,
+      numberOfMonths: dto.numberOfMonths,
+      paymentFrequency: dto.paymentFrequency,
+      accountNumber: dto.accountNumber,
+      bankCode: dto.bankCode,
+      reason: `Investment in ${property.title}`,
+      description: `${dto.investmentType} investment - ${dto.shares ? `${dto.shares} shares` : `₦${amount}`}`,
+    };
 
-      return {
-        success: true,
-        message: 'Payment successful via wallet',
-        paymentMethod: 'wallet',
-        amount,
-        balance: paymentResult.balanceKobo,
-      };
-    } else {
-      throw new BadRequestException('Invalid payment option');
-    }
+    return await this.paymentProcessor.processPayment(paymentRequest, user, property);
   }
 }

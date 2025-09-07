@@ -1,6 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
-// import { PartialType } from '@nestjs/mapped-types';
-import { IsNumber, IsString, IsUUID, IsEnum, IsDate } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNumber, IsString, IsEnum, IsDate, IsOptional } from 'class-validator';
+import { PaymentOption } from '../../landlord/dto/commercial.dto';
 
 export enum PaymentDuration {
   THREE_MONTH = 3,
@@ -10,13 +10,6 @@ export enum PaymentDuration {
 }
 
 export class SaveRentDto {
-  // @ApiProperty({
-  //   example: 'd3f7a939-4fc0-4a1e-9a0b-92b748c63e2a',
-  //   description: 'UUID of the user creating the wallet',
-  // })
-  // @IsUUID()
-  // userId: string;
-
   @ApiProperty({
     example: 5000.0,
     description: 'Amount to save for rent',
@@ -68,6 +61,31 @@ export class SaveRentDto {
   })
   @IsNumber()
   estimatedReturn: number;
+
+  @ApiPropertyOptional({
+    enum: PaymentOption,
+    example: PaymentOption.WALLET,
+    description: 'Payment option: card, wallet, bank, or transfer',
+  })
+  @IsOptional()
+  @IsEnum(PaymentOption)
+  paymentOption?: PaymentOption;
+
+  @ApiPropertyOptional({
+    example: '0108696089',
+    description: 'Account number (required for bank payment)',
+  })
+  @IsOptional()
+  @IsString()
+  accountNumber?: string;
+
+  @ApiPropertyOptional({
+    example: '063',
+    description: 'Bank code (required for bank payment)',
+  })
+  @IsOptional()
+  @IsString()
+  bankCode?: string;
 }
 
 export class FundSavingsDto {
@@ -77,6 +95,30 @@ export class FundSavingsDto {
   })
   @IsNumber()
   amount: number;
+
+  @ApiProperty({
+    enum: PaymentOption,
+    example: PaymentOption.WALLET,
+    description: 'Payment option: card, wallet, bank, or transfer',
+  })
+  @IsEnum(PaymentOption)
+  paymentOption: PaymentOption;
+
+  @ApiPropertyOptional({
+    example: '0108696089',
+    description: 'Account number (required for bank payment)',
+  })
+  @IsOptional()
+  @IsString()
+  accountNumber?: string;
+
+  @ApiPropertyOptional({
+    example: '063',
+    description: 'Bank code (required for bank payment)',
+  })
+  @IsOptional()
+  @IsString()
+  bankCode?: string;
 }
 
 // export class UpdateTenantDto extends PartialType(CreateTenantDto) {}

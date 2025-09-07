@@ -13,7 +13,9 @@ import {
 } from './dto/wallet.dto';
 import { PaystackGateway } from '../payment/gateways/paystack.gateway';
 import { WalletTransaction } from './entities/wallet-transaction.entity';
-import { randomUUID } from 'crypto';
+// import { randomUUID } from 'crypto';
+import { PaymentProcessorService } from '../../shared/services/payment-processor.service';
+import { PaymentOption } from '../landlord/dto/commercial.dto';
 
 @Injectable()
 export class WalletService {
@@ -24,6 +26,7 @@ export class WalletService {
     private readonly walletTransactionRepository: Repository<WalletTransaction>,
     private readonly paystack: PaystackGateway,
     private readonly dataSource: DataSource,
+    private readonly paymentProcessor: PaymentProcessorService,
   ) {}
 
   async getOrCreateWallet(userId: string) {
@@ -38,29 +41,48 @@ export class WalletService {
     return await this.walletRepository.save(wallet);
   }
 
-  async fundWallet(fundWalletDto: FundWalletDto) {
-    const { userId, amountNaira } = fundWalletDto;
+  async fundWallet(
+    fundWalletDto: FundWalletDto & {
+      paymentOption?: PaymentOption;
+      accountNumber?: string;
+      bankCode?: string;
+    },
+  ) {
+    const {
+      userId,
+      amountNaira,
+      email,
+      paymentOption = PaymentOption.CARD,
+    } = fundWalletDto;
 
     const wallet = await this.walletRepository.findOne({ where: { userId } });
     if (!wallet) throw new NotFoundException('Wallet not found');
 
-    // TODO Take the money from the user!
+    if (paymentOption === PaymentOption.WALLET) {
+      throw new BadRequestException('Cannot fund wallet using wallet payment');
+    }
 
-    const reference = `fund_${userId}_${Date.now()}_${randomUUID()}`;
-
-    const payload = {
-      email: fundWalletDto.email,
+    const paymentRequest = {
+      userId,
+      userEmail: email,
       amount: amountNaira,
-      reference,
-      metadata: {
-        userId,
-        walletId: wallet.id,
-        purpose: 'wallet_funding',
-      },
+      paymentOption,
+      accountNumber: fundWalletDto.accountNumber,
+      bankCode: fundWalletDto.bankCode,
+      reason: 'Wallet funding',
+      description: `Fund wallet with ₦${amountNaira}`,
     };
-    const init = await this.paystack.initiatePayment(payload);
-    return init.data.authorization_url;
-    // return { ...init, reference, amount, walletId: wallet.id };
+
+    const paymentResult = await this.paymentProcessor.processPayment(
+      paymentRequest,
+      { email },
+    );
+
+    if (paymentResult.authorization_url) {
+      return paymentResult.authorization_url;
+    }
+
+    return paymentResult;
   }
 
   async verifyAndCredit(reference: string) {
@@ -98,7 +120,7 @@ export class WalletService {
   async payWithWallet(payWithWalletDto: PayWithWalletDto) {
     const { userId, amountNaira, reason } = payWithWalletDto;
 
-    return await this.dataSource.transaction(async manager => {
+    return await this.dataSource.transaction(async (manager) => {
       const wallet = await manager.findOne(Wallet, { where: { userId } });
       if (!wallet) throw new NotFoundException('Wallet not found');
 

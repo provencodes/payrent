@@ -1,11 +1,10 @@
-// payment.service.ts
 import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import * as crypto from 'crypto';
-import { InitiatePaymentDto } from './dto/initiate-payment.dto';
+// import { InitiatePaymentDto } from './dto/initiate-payment.dto';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
 import { PaystackGateway } from './gateways/paystack.gateway';
 import { ConfigService } from '@nestjs/config';
@@ -104,7 +103,7 @@ export class PaymentService {
     }
   }
 
-  async initiate(dto: InitiatePaymentDto) {
+  async initiate(dto: any) {
     const res = await this.paystack.initiatePayment(dto);
     return {
       Status: 201,

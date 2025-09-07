@@ -102,55 +102,93 @@ export class PropertyService {
     updatePropertyDto: UpdatePropertyDto,
   ): Promise<Property> {
     const property = await this.findOne(id);
-    
+
     if (updatePropertyDto.listingType) {
       this.validateListingTypeRequirements(updatePropertyDto);
     }
-    
+
     const updated = Object.assign(property, updatePropertyDto);
     return await this.propertyRepository.save(updated);
   }
 
   private validateListingTypeRequirements(dto: UpdatePropertyDto): void {
-    if (dto.listingType === ListingType.SHARES && dto.pricePerShare === undefined) {
-      throw new BadRequestException('Price per share is required for shares listing');
+    if (
+      dto.listingType === ListingType.SHARES &&
+      dto.pricePerShare === undefined
+    ) {
+      throw new BadRequestException(
+        'Price per share is required for shares listing',
+      );
     }
-    
+
     if (dto.listingType === ListingType.RENT) {
-      const requiredFields = ['rentalPrice', 'serviceCharge', 'legalAndAdministrativeFee', 'agentCommission'];
-      const missingFields = requiredFields.filter(field => dto[field] === undefined);
+      const requiredFields = [
+        'rentalPrice',
+        'serviceCharge',
+        'legalAndAdministrativeFee',
+        'agentCommission',
+      ];
+      const missingFields = requiredFields.filter(
+        (field) => dto[field] === undefined,
+      );
       if (missingFields.length > 0) {
-        throw new BadRequestException(`${missingFields.join(', ')} required for rent listing`);
+        throw new BadRequestException(
+          `${missingFields.join(', ')} required for rent listing`,
+        );
       }
     }
-    
+
     if (dto.listingType === ListingType.SALE) {
       if (!dto.price && !(dto.numberOfUnit && dto.pricePerUnit)) {
-        throw new BadRequestException('Price or (numberOfUnit and pricePerUnit) required for sale listing');
+        throw new BadRequestException(
+          'Price or (numberOfUnit and pricePerUnit) required for sale listing',
+        );
       }
     }
-    
+
     if (dto.listingType === ListingType.JOINT_VENTURE) {
-      const requiredFields = ['renovationType', 'estimatedTimeline', 'paymentType'];
-      const missingFields = requiredFields.filter(field => dto[field] === undefined);
+      const requiredFields = [
+        'renovationType',
+        'estimatedTimeline',
+        'paymentType',
+      ];
+      const missingFields = requiredFields.filter(
+        (field) => dto[field] === undefined,
+      );
       if (missingFields.length > 0) {
-        throw new BadRequestException(`${missingFields.join(', ')} required for joint venture listing`);
+        throw new BadRequestException(
+          `${missingFields.join(', ')} required for joint venture listing`,
+        );
       }
     }
-    
+
     if (dto.listingType === ListingType.FLIP) {
       const requiredFields = ['price', 'resaleValue', 'potentialRoi'];
-      const missingFields = requiredFields.filter(field => dto[field] === undefined);
+      const missingFields = requiredFields.filter(
+        (field) => dto[field] === undefined,
+      );
       if (missingFields.length > 0) {
-        throw new BadRequestException(`${missingFields.join(', ')} required for flip listing`);
+        throw new BadRequestException(
+          `${missingFields.join(', ')} required for flip listing`,
+        );
       }
     }
-    
+
     if (dto.listingType === ListingType.CO_VEST) {
-      const requiredFields = ['price', 'investmentDuration', 'potentialRoi', 'investmentGoal', 'minimumInvestment'];
-      const missingFields = requiredFields.filter(field => dto[field] === undefined);
+      const requiredFields = [
+        'price',
+        'investmentDuration',
+        'potentialRoi',
+        'investmentGoal',
+        'minimumInvestment',
+      ];
+      const missingFields = requiredFields.filter(
+        (field) => dto[field] === undefined,
+      );
       if (missingFields.length > 0) {
-        throw new BadRequestException(`${missingFields.join(', ')} required for co-vest listing`);
+        throw new BadRequestException(
+          `${missingFields.join(', ')} required for co-vest listing`,
+        );
       }
     }
   }

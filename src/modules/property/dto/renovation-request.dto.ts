@@ -1,8 +1,7 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsArray,
   IsEnum,
-  IsNotEmpty,
   IsOptional,
   IsString,
   ValidateNested,

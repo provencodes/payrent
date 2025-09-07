@@ -27,6 +27,7 @@ export class PaystackGateway {
         {
           email: dto.email,
           amount: dto.amount * 100, // Paystack expects kobo
+          channels: dto?.channels || null,
           metadata: { ...dto.metadata },
           currency: 'NGN',
           reference: dto?.reference || defaultRef,

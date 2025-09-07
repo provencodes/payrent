@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PartialType } from '@nestjs/mapped-types';
 import {
   IsInt,
@@ -7,7 +7,10 @@ import {
   IsString,
   IsUUID,
   Min,
+  IsOptional,
+  IsEnum,
 } from 'class-validator';
+import { PaymentOption } from '../../landlord/dto/commercial.dto';
 
 export class CreateWalletDto {
   @ApiProperty({
@@ -43,6 +46,31 @@ export class FundWalletDto {
   @IsString()
   @IsNotEmpty()
   email: string;
+
+  @ApiPropertyOptional({
+    enum: PaymentOption,
+    example: PaymentOption.CARD,
+    description: 'Payment option: card, bank, or transfer (wallet not allowed)',
+  })
+  @IsOptional()
+  @IsEnum(PaymentOption)
+  paymentOption?: PaymentOption;
+
+  @ApiPropertyOptional({
+    example: '0108696089',
+    description: 'Account number (required for bank payment)',
+  })
+  @IsOptional()
+  @IsString()
+  accountNumber?: string;
+
+  @ApiPropertyOptional({
+    example: '063',
+    description: 'Bank code (required for bank payment)',
+  })
+  @IsOptional()
+  @IsString()
+  bankCode?: string;
 }
 
 export class PayWithWalletDto {

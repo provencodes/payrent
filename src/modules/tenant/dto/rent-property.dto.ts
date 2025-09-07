@@ -6,12 +6,14 @@ import {
   IsOptional,
   Min,
   Max,
+  IsString,
 } from 'class-validator';
+import { PaymentOption } from '../../landlord/dto/commercial.dto';
 
 export enum PaymentMethod {
   CARD = 'card',
   WALLET = 'wallet',
-  BANK_TRANSFER = 'bank_transfer',
+  TRANSFER = 'transfer',
   BANK = 'bank',
 }
 
@@ -42,17 +44,19 @@ export class RentPropertyDto {
 
   @ApiProperty({
     example: '0108696089',
-    description: 'Account number (required for bank transfer)',
+    description: 'Account number (required for bank payment)',
     required: false,
   })
   @IsOptional()
+  @IsString()
   accountNumber?: string;
 
   @ApiProperty({
     example: '063',
-    description: 'Bank code (required for bank transfer)',
+    description: 'Bank code (required for bank payment)',
     required: false,
   })
   @IsOptional()
+  @IsString()
   bankCode?: string;
 }

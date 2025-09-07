@@ -33,7 +33,11 @@ export class TenantController {
     description: 'Rent savings plan created successfully',
   })
   createRentSavings(@Body() saveRentDto: SaveRentDto, @Request() req) {
-    return this.tenantService.createRentSavings(saveRentDto, req.user.sub);
+    return this.tenantService.createRentSavings(
+      saveRentDto,
+      req.user.sub,
+      req.user.email,
+    );
   }
 
   @Post('loan/apply')
@@ -89,7 +93,11 @@ export class TenantController {
     return this.tenantService.fundRentSavings(
       savingsId,
       req.user.sub,
+      req.user.email,
       fundSavingsDto.amount,
+      fundSavingsDto.paymentOption,
+      fundSavingsDto.accountNumber,
+      fundSavingsDto.bankCode,
     );
   }
 
