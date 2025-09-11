@@ -28,7 +28,7 @@ import { PaystackCallbackDto, VerifyAccountDto } from './dto/paystack.dto';
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
-  @Post()
+  @Post('initiate')
   @ApiOperation({ summary: 'Initiate payment' })
   @ApiBody({
     description: 'initiate payment',
@@ -38,7 +38,6 @@ export class PaymentController {
     status: 200,
     description: 'Payment initiated successfully',
   })
-  @Post('initiate')
   async initiate(@Body() dto: InitiatePaymentDto) {
     return this.paymentService.initiate(dto);
   }
@@ -51,7 +50,7 @@ export class PaymentController {
     return await this.paymentService.verify(query);
   }
 
-  @Post()
+  @Post('verify')
   @ApiOperation({ summary: 'verify payment' })
   @ApiBody({
     description: 'verify payment',
@@ -61,7 +60,6 @@ export class PaymentController {
     status: 200,
     description: 'Payment verified successfully',
   })
-  @Post('verify')
   async verify(@Body() dto: VerifyPaymentDto) {
     return this.paymentService.verify(dto);
   }
@@ -76,35 +74,32 @@ export class PaymentController {
     return this.paymentService.handleWebhook(req.body, signature);
   }
 
-  @Get()
+  @Get('/all-banks')
   @ApiOperation({ summary: 'Get all banks' })
   @ApiResponse({
     status: 200,
     description: 'List of banks',
   })
-  @Get('/all-banks')
   async getBanks() {
     return await this.paymentService.getBanks();
   }
 
-  @Get()
+  @Get('/all-banks/pay-with-bank')
   @ApiOperation({ summary: 'Get all banks' })
   @ApiResponse({
     status: 200,
     description: 'List of banks',
   })
-  @Get('/all-banks/pay-with-bank')
   async getPayWithBanks() {
     return await this.paymentService.getPayWithBanks();
   }
 
-  @Get()
+  @Get('/verify-account')
   @ApiOperation({ summary: 'Verify a user account' })
   @ApiResponse({
     status: 200,
     description: 'User account verified successfully.',
   })
-  @Get('/verify-account')
   async verifyAccount(@Query() query: VerifyAccountDto) {
     return await this.paymentService.verifyAccount(query);
   }

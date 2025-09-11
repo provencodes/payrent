@@ -122,6 +122,7 @@ export class PaymentService {
       };
     }
 
+    
     // handle logic like crediting wallet, updating status, etc.
     const status = res.data.status;
     const data = res.data;
@@ -131,6 +132,16 @@ export class PaymentService {
       const reference = data.reference;
       const email = data.customer.email;
       const amount = data.amount / 100; // Convert back to Naira
+      
+      // check if payment have been verified already
+      const verified = await this.paymentRepo.findOne({ where: reference }) || await this.installmentRepo.findOne({ where: reference });
+      console.log(verified);
+      if (verified) {
+        return {
+          message: 'Payment already verified successfully',
+          data: res.data,
+        }
+      }
 
       const identifierOptions: UserIdentifierOptionsType = {
         identifierType: 'email',
