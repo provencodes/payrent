@@ -10,24 +10,28 @@ A comprehensive real estate investment and property management platform built wi
 ## 🚀 Features
 
 ### 🏠 Property Management
+
 - **Multiple Investment Types**: Sale, Rent, Shares, Joint Ventures, Co-investment, Property Flipping
 - **Property Listings**: Create and manage property listings with detailed information
 - **Multi-tenant Rentals**: Support for multiple tenants per rental property
 - **Property Status Tracking**: Real-time updates on property sales and rental status
 
 ### 💰 Financial Services
+
 - **Multi-payment Options**: Card, Bank Transfer, Wallet, Direct Bank payments
 - **Wallet System**: Integrated wallet for seamless transactions
 - **Investment Tracking**: Comprehensive portfolio management
 - **Financial Overview**: Complete transaction history and analytics
 
 ### 🏦 Tenant Services
+
 - **Rent Savings Plans**: Automated savings for future rent payments
 - **Loan Applications**: Apply for rental and deposit loans
 - **Payment History**: Track all rental payments and transactions
 - **Financial Planning**: Interest calculations and repayment schedules
 
 ### 👥 User Management
+
 - **Multi-user Types**: Landlords, Tenants, Investors
 - **Authentication**: JWT-based auth with email verification
 - **Social Login**: Google and Facebook integration
@@ -56,12 +60,14 @@ A comprehensive real estate investment and property management platform built wi
 ## ⚡ Quick Start
 
 ### 1. Clone the Repository
+
 ```bash
 git clone <repository-url>
 cd payRent
 ```
 
 ### 2. Install Dependencies
+
 ```bash
 yarn install
 # or
@@ -69,7 +75,9 @@ npm install
 ```
 
 ### 3. Environment Setup
+
 Create `.env` file in the root directory:
+
 ```env
 # Database
 DATABASE_HOST=localhost
@@ -103,6 +111,7 @@ CLIENT_BASE_URL=http://localhost:3000
 ```
 
 ### 4. Database Setup
+
 ```bash
 # Run migrations
 yarn migration:run
@@ -112,6 +121,7 @@ yarn migration:generate src/migrations/InitialMigration
 ```
 
 ### 5. Start the Application
+
 ```bash
 # Development
 yarn start:dev
@@ -122,13 +132,15 @@ yarn start:prod
 ```
 
 ### 6. Access the Application
-- **API**: http://localhost:3000
-- **Swagger Documentation**: http://localhost:3000/api
-- **Health Check**: http://localhost:3000/health
+
+- **API**: <http://localhost:3000>
+- **Swagger Documentation**: <http://localhost:3000/api>
+- **Health Check**: <http://localhost:3000/health>
 
 ## 📚 API Documentation
 
 ### Authentication Endpoints
+
 ```
 POST /auth/register          # User registration
 POST /auth/login             # User login
@@ -139,6 +151,7 @@ POST /auth/facebook          # Facebook OAuth
 ```
 
 ### Property Endpoints
+
 ```
 GET    /properties           # Get all properties
 GET    /properties/rentals   # Get available rental properties
@@ -151,6 +164,7 @@ GET    /properties/joint-ventures # Get joint venture properties
 ```
 
 ### Financial Endpoints
+
 ```
 GET /financial/transactions   # Transaction history
 GET /financial/wallet/history # Wallet transactions
@@ -159,12 +173,14 @@ GET /financial/overview       # Financial overview
 ```
 
 ### Landlord Endpoints
+
 ```
 POST /landlord/invest         # Initiate investment
 POST /landlord/joint-ventures # Joint venture investment
 ```
 
 ### Tenant Endpoints
+
 ```
 GET  /tenant/available-rentals # Get available rental properties
 POST /tenant/rent-property     # Rent a property
@@ -175,6 +191,7 @@ GET  /tenant/loan-applications # Get loan applications
 ```
 
 ### Wallet Endpoints
+
 ```
 GET  /wallet                  # Get wallet details
 POST /wallet/fund             # Fund wallet
@@ -206,6 +223,7 @@ src/
 ## 🔧 Configuration
 
 ### Financial Settings
+
 ```typescript
 // config/app.config.ts
 finance: {
@@ -217,6 +235,7 @@ finance: {
 ```
 
 ### Loan Configuration
+
 ```typescript
 loan: {
   maxDebtToIncomeRatio: 0.4,   // 40% max debt-to-income
@@ -243,6 +262,7 @@ yarn test:cov
 ## 🚀 Deployment
 
 ### Using Docker
+
 ```bash
 # Build image
 docker build -t payrent .
@@ -252,6 +272,7 @@ docker run -p 3000:3000 payrent
 ```
 
 ### Using PM2
+
 ```bash
 # Install PM2
 npm install -g pm2
@@ -263,6 +284,7 @@ pm2 start ecosystem.config.js
 ## 📊 Database Schema
 
 ### Core Entities
+
 - **Users**: User accounts and profiles
 - **Properties**: Property listings and details
 - **Payments**: Transaction records
@@ -305,6 +327,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🆘 Support
 
 For support and questions:
+
 - Create an issue in the repository
 - Contact the development team
 - Check the API documentation at `/api`
@@ -312,6 +335,7 @@ For support and questions:
 ## 🔄 Changelog
 
 ### v1.0.0
+
 - Initial release with core features
 - Property management system
 - Multi-payment integration
@@ -321,3 +345,75 @@ For support and questions:
 ---
 
 **Built with ❤️ using NestJS**
+
+payload: {
+  event: 'charge.success',
+  data: {
+    id: 5330342686,
+    domain: 'test',
+    status: 'success',
+    reference: 'trx_a9c0b7a1-23b1-44bb-bdf7-e22f3f69c106_1757697271344_2f5c63f3-0b1a-4a18-afd9-08a0f042010c',
+    amount: 2000,
+    message: null,
+    gateway_response: 'Successful',
+    paid_at: '2025-09-12T17:14:46.000Z',
+    created_at: '2025-09-12T17:14:31.000Z',
+    channel: 'card',
+    currency: 'NGN',
+    ip_address: '105.112.219.245',
+    metadata: {
+      userId: 'a9c0b7a1-23b1-44bb-bdf7-e22f3f69c106',
+      propertyId: '73aedbaa-4df8-42b5-a5e0-7d922bbd43ef',
+      investmentType: 'sale',
+      paymentType: 'one_time',
+      numberOfMonth: '12',
+      shares: '',
+      paymentFrequency: ''
+    },
+    fees_breakdown: null,
+    log: null,
+    fees: 30,
+    fees_split: null,
+    authorization: {
+      authorization_code: 'AUTH_8ln2biprvf',
+      bin: '408408',
+      last4: '4081',
+      exp_month: '12',
+      exp_year: '2030',
+      channel: 'card',
+      card_type: 'visa ',
+      bank: 'TEST BANK',
+      country_code: 'NG',
+      brand: 'visa',
+      reusable: true,
+      signature: 'SIG_o35wDStwH2UZNU7k68hw',
+      account_name: null,
+      receiver_bank_account_number: null,
+      receiver_bank: null
+    },
+    customer: {
+      id: 304925662,
+      first_name: null,
+      last_name: null,
+      email: '<landlordpayrent@yopmail.com>',
+      customer_code: 'CUS_r3bkvm1cmo4w838',
+      phone: null,
+      metadata: null,
+      risk_action: 'default',
+      international_format_phone: null
+    },
+    plan: {},
+    subaccount: {},
+    split: {},
+    order_id: null,
+    paidAt: '2025-09-12T17:14:46.000Z',
+    requested_amount: 2000,
+    pos_transaction_data: null,
+    source: {
+      type: 'api',
+      source: 'merchant_api',
+      entry_point: 'transaction_initialize',
+      identifier: null
+    }
+  }
+}
