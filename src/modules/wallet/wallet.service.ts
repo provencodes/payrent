@@ -16,6 +16,7 @@ import { WalletTransaction } from './entities/wallet-transaction.entity';
 // import { randomUUID } from 'crypto';
 import { PaymentProcessorService } from '../../shared/services/payment-processor.service';
 import { PaymentOption } from '../landlord/dto/commercial.dto';
+import { CurrencyUtil } from '../../shared/utils/currency.util';
 
 @Injectable()
 export class WalletService {
@@ -88,7 +89,7 @@ export class WalletService {
   async verifyAndCredit(reference: string) {
     const verification = await this.paystack.verifyPayment(reference);
     const status = verification?.data?.status; // 'success'
-    const amount = Number(verification?.data?.amount || 0); // in kobo
+    const amountKobo = Number(verification?.data?.amount || 0); // Paystack returns amount in kobo
     const metadata = verification?.data || {};
 
     if (status !== 'success') {
@@ -106,7 +107,8 @@ export class WalletService {
     const userId = parts[1];
     const wallet = await this.getOrCreateWallet(userId);
 
-    await this.applyCredit(wallet.id, amount, 'funding', reference, metadata);
+    // amountKobo is already in kobo from Paystack, no conversion needed
+    await this.applyCredit(wallet.id, amountKobo, 'funding', reference, metadata);
 
     return {
       credited: true,
@@ -124,7 +126,7 @@ export class WalletService {
       const wallet = await manager.findOne(Wallet, { where: { userId } });
       if (!wallet) throw new NotFoundException('Wallet not found');
 
-      const amountKobo = amountNaira * 100;
+      const amountKobo = CurrencyUtil.nairaToKobo(amountNaira);
       if (Number(wallet.balanceKobo) < amountKobo) {
         throw new BadRequestException('Insufficient wallet balance');
       }

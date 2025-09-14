@@ -25,6 +25,7 @@ import {
   PaymentMethod,
   PaymentMethodType,
 } from '../user/entities/payment-method.entity';
+import { CurrencyUtil } from '../../shared/utils/currency.util';
 
 @Injectable()
 export class PaymentService {
@@ -134,7 +135,7 @@ export class PaymentService {
       const metadata = data?.metadata;
       const reference = data.reference;
       const email = data.customer.email;
-      const amount = data.amount / 100; // Convert back to Naira
+      const amount = CurrencyUtil.koboToNaira(data.amount); // Convert Kobo to Naira
 
       // check if payment have been verified already
       const verified =
@@ -268,7 +269,6 @@ export class PaymentService {
   }
 
   async handleWebhook(payload: any, signature: string) {
-    console.log('payload:', payload);
     const secret = this.configService.get<string>('PAYSTACK_SECRET_KEY');
 
     const hash = crypto
@@ -287,10 +287,19 @@ export class PaymentService {
       const metadata = data?.metadata;
       const reference = data.reference;
       const email = data.customer.email;
-      const amount = data.amount / 100; // Convert back to Naira
+      const amount = CurrencyUtil.koboToNaira(data.amount); // Convert Kobo to Naira
 
       const user = await this.userService.getUserByEmail(email);
-      console.log('Processing webhook for user: ', user.email);
+
+      const verified =
+        (await this.paymentRepo.findOne({ where: { reference } })) ||
+        (await this.installmentRepo.findOne({ where: { reference } }));
+      if (verified) {
+        return {
+          message: 'Payment already verified successfully',
+          data: data,
+        };
+      }
 
       // Store payment method if it's a card payment
       if (data.authorization && data.authorization.authorization_code) {
@@ -391,27 +400,6 @@ export class PaymentService {
           reference,
           startedAt: data.paid_at,
         });
-
-        // Save successful payment to DB
-        // const payment = this.paymentRepo.create({
-        //   reference,
-        //   email,
-        //   amount,
-        //   status: 'success',
-        //   metadata: data.metadata || {},
-        // });
-
-        // await this.paymentRepo.save(payment);
-
-        // // If installment payment, mark installment paid
-        // if (data.metadata?.installmentId) {
-        //   await this.installmentRepo.update(
-        //     { id: data.metadata.installmentId },
-        //     { paid: true },
-        //   );
-        // }
-
-        // return { received: true };
       }
       // Handle other events if needed
 
@@ -425,11 +413,14 @@ export class PaymentService {
     const axios = (await import('axios')).default;
     const secret = this.configService.get<string>('PAYSTACK_SECRET_KEY');
 
+    // installment.amount is stored in Naira, convert to Kobo for Paystack
+    const amountInKobo = CurrencyUtil.nairaToKobo(installment.amount);
+
     await axios.post(
       'https://api.paystack.co/transaction/charge_authorization',
       {
         email: installment.user.email,
-        amount: installment.amount * 100,
+        amount: amountInKobo,
         authorization_code: installment.paymentMethod.authorizationCode,
         metadata: { installmentId: installment.id },
       },
@@ -442,7 +433,7 @@ export class PaymentService {
     );
   }
 
-  async triggerAutoDebit(userId: string, amount: number, metadata: any = {}) {
+  async triggerAutoDebit(userId: string, amountNaira: number, metadata: any = {}) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) return;
 
@@ -453,11 +444,14 @@ export class PaymentService {
     const axios = (await import('axios')).default;
     const secret = this.configService.get<string>('PAYSTACK_SECRET_KEY');
 
+    // Convert Naira to Kobo for Paystack
+    const amountInKobo = CurrencyUtil.nairaToKobo(amountNaira);
+
     await axios.post(
       'https://api.paystack.co/transaction/charge_authorization',
       {
         email: user.email,
-        amount: amount * 100,
+        amount: amountInKobo,
         authorization_code: defaultPaymentMethod.authorizationCode,
         metadata,
       },

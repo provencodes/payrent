@@ -4,6 +4,7 @@ import { TransferRecipient } from './gateway.interface';
 import { PaystackSubscriptionDto } from './../dto/paystack.dto';
 import { CreatePlanType } from './gateway.interface';
 import { randomUUID } from 'crypto';
+import { CurrencyUtil } from '../../../shared/utils/currency.util';
 // import { InitiatePaymentDto } from '../dto/initiate-payment.dto';
 
 @Injectable()
@@ -20,13 +21,18 @@ export class PaystackGateway {
       throw new HttpException('userId is required in the dto.metadata', 400);
     }
 
+    CurrencyUtil.validateAmount(dto.amount, 'Payment amount');
+
     const defaultRef = `trx_${dto.metadata.userId}_${Date.now()}_${randomUUID()}`;
+    // Convert Naira to Kobo using utility
+    const amountInKobo = CurrencyUtil.nairaToKobo(dto.amount);
+    
     try {
       const response = await axios.post(
         `${this.baseUrl}/transaction/initialize`,
         {
           email: dto.email,
-          amount: dto.amount * 100, // Paystack expects kobo
+          amount: amountInKobo, // Paystack expects kobo (integer)
           channels: dto?.channels || null,
           metadata: { ...dto.metadata },
           currency: 'NGN',
@@ -57,12 +63,17 @@ export class PaystackGateway {
 
   // paystack.service.ts
   async createPlan(payload: CreatePlanType) {
+    CurrencyUtil.validateAmount(payload.amount, 'Plan amount');
+
+    // Convert Naira to Kobo using utility
+    const amountInKobo = CurrencyUtil.nairaToKobo(payload.amount);
+    
     const response = await axios.post(
       `${this.baseUrl}/plan`,
       {
         name: payload.name || `Auto plan ${Date.now()}`,
         interval: payload.interval,
-        amount: payload.amount * 100, // amount in kobo
+        amount: amountInKobo, // amount in kobo (integer)
         description: payload?.description,
         send_invoices: payload?.send_invoices,
         send_sms: payload.send_sms,
