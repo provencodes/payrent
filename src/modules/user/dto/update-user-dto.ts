@@ -80,20 +80,7 @@ export class UpdateProfileDto {
   @IsString()
   idDocument?: string;
 
-  @ApiProperty({ example: '0123456789' })
-  @IsOptional()
-  @IsString()
-  accountNumber?: string;
 
-  @ApiProperty({ example: 'John Doe' })
-  @IsOptional()
-  @IsString()
-  accountName?: string;
-
-  @ApiProperty({ example: 'GTBank' })
-  @IsOptional()
-  @IsString()
-  bankName?: string;
 
   @ApiProperty({ type: FileObject, required: false })
   @IsOptional()
@@ -115,8 +102,5 @@ export class UpdateProfileDto {
   @IsEnum(UserType)
   userType?: UserType;
 
-  @ApiProperty({ example: false })
-  @IsOptional()
-  @IsBoolean()
-  autoCharge?: boolean;
+
 }

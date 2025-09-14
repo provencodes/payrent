@@ -1,6 +1,7 @@
 import { UserType } from '../entities/user.entity';
 import { Installment } from '../../payment/entities/installment.entity';
 import { Wallet } from '../../wallet/entities/wallet.entity';
+import { BankAccount } from '../entities/bank-account.entity';
 
 interface FileObject {
   url: string;
@@ -25,16 +26,15 @@ export interface UserInterface {
   idNumber?: string;
   bvn?: string;
   idDocument?: string;
-  accountNumber?: string;
-  accountName?: string;
-  bankName?: string;
+
   profilePicture?: FileObject;
   isActive?: boolean;
   userType?: UserType;
   paystackAuthCode?: string;
-  autoCharge?: boolean;
+
   installments?: Installment[];
   wallet?: Wallet;
+  bankAccounts?: BankAccount[];
   otp?: string;
   isOtpVerified?: boolean;
   otpCooldownExpires?: Date;

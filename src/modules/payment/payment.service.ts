@@ -21,6 +21,7 @@ import { CreatePlanType } from './gateways/gateway.interface';
 import { Rental } from '../property/entities/rental.entity';
 import { Property } from '../property/entities/property.entity';
 import { DataSource } from 'typeorm';
+import { PaymentMethod, PaymentMethodType } from '../user/entities/payment-method.entity';
 
 @Injectable()
 export class PaymentService {
@@ -148,17 +149,28 @@ export class PaymentService {
         identifierType: 'email',
         identifier: email,
       };
-      const userPayload = {
-        identifierOptions,
-        updatePayload: {
-          paystackAuthCode: data.authorization.authorization_code,
-        },
-      };
-
       const user = await this.userService.getUserByEmail(email);
 
-      if (!user.paystackAuthCode) {
-        await this.userService.updateUserRecord(userPayload);
+      // Store payment method if it's a card payment
+      if (data.authorization && data.authorization.authorization_code) {
+        const existingMethod = await this.userService.getPaymentMethodByAuthCode(
+          metadata.userId,
+          data.authorization.authorization_code
+        );
+
+        if (!existingMethod) {
+          await this.userService.addPaymentMethod(metadata.userId, {
+            authorizationCode: data.authorization.authorization_code,
+            last4: data.authorization.last4,
+            cardType: data.authorization.card_type,
+            bank: data.authorization.bank,
+            brand: data.authorization.brand,
+            expMonth: data.authorization.exp_month,
+            expYear: data.authorization.exp_year,
+            reusable: data.authorization.reusable,
+            type: PaymentMethodType.CARD,
+          });
+        }
       }
 
       if (metadata.paymentType === 'one_time') {
@@ -200,10 +212,31 @@ export class PaymentService {
         };
         const subscription = await this.paystack.subscribeToPlan(subData);
 
+        // Get or create payment method
+        let paymentMethod = await this.userService.getPaymentMethodByAuthCode(
+          metadata.userId,
+          data.authorization.authorization_code
+        );
+
+        if (!paymentMethod) {
+          const result = await this.userService.addPaymentMethod(metadata.userId, {
+            authorizationCode: data.authorization.authorization_code,
+            last4: data.authorization.last4,
+            cardType: data.authorization.card_type,
+            bank: data.authorization.bank,
+            brand: data.authorization.brand,
+            expMonth: data.authorization.exp_month,
+            expYear: data.authorization.exp_year,
+            reusable: data.authorization.reusable,
+            type: PaymentMethodType.CARD,
+          });
+          paymentMethod = result.data;
+        }
+
         // save the installment
         await this.installmentRepo.save({
           subscriptionCode: subscription.subscription_code,
-          authorizationCode: data.authorization.authorization_code,
+          paymentMethodId: paymentMethod.id,
           userId: metadata.userId,
           propertyId: metadata.propertyId,
           investmentType: metadata.investmentType,
@@ -212,7 +245,7 @@ export class PaymentService {
           status: 'active',
           nextPaymentDate: this.calculateNextDate(metadata.paymentFrequency),
           reference,
-          startedAt: data.paid_at, // new Date(data.paid_at * 1000),
+          startedAt: data.paid_at,
           email: email,
           customerCode: data.customer.customer_code,
         });
@@ -246,21 +279,29 @@ export class PaymentService {
       const email = data.customer.email;
       const amount = data.amount / 100; // Convert back to Naira
 
-      const userPayload = {
-        identifierOptions: {
-          identifierType: email,
-          identifier: email,
-        },
-        updatePayload: {
-          paystackAuthCode: data.authorization.authorization_code,
-        },
-      };
-
       const user = await this.userService.getUserByEmail(email);
-      console.log('updatePayload: ', userPayload);
+      console.log('Processing webhook for user: ', user.email);
 
-      if (!user.paystackAuthCode) {
-        await this.userService.updateUserRecord(userPayload);
+      // Store payment method if it's a card payment
+      if (data.authorization && data.authorization.authorization_code) {
+        const existingMethod = await this.userService.getPaymentMethodByAuthCode(
+          metadata.userId,
+          data.authorization.authorization_code
+        );
+
+        if (!existingMethod) {
+          await this.userService.addPaymentMethod(metadata.userId, {
+            authorizationCode: data.authorization.authorization_code,
+            last4: data.authorization.last4,
+            cardType: data.authorization.card_type,
+            bank: data.authorization.bank,
+            brand: data.authorization.brand,
+            expMonth: data.authorization.exp_month,
+            expYear: data.authorization.exp_year,
+            reusable: data.authorization.reusable,
+            type: PaymentMethodType.CARD,
+          });
+        }
       }
 
       if (metadata.paymentType === 'one_time') {
@@ -365,8 +406,7 @@ export class PaymentService {
   }
 
   async autoDebitUser(installment: Installment) {
-    const authorizationCode = installment.user?.paystackAuthCode;
-    if (!authorizationCode) return;
+    if (!installment.paymentMethod?.authorizationCode) return;
 
     const axios = (await import('axios')).default;
     const secret = this.configService.get<string>('PAYSTACK_SECRET_KEY');
@@ -376,7 +416,7 @@ export class PaymentService {
       {
         email: installment.user.email,
         amount: installment.amount * 100,
-        authorization_code: authorizationCode,
+        authorization_code: installment.paymentMethod.authorizationCode,
         metadata: { installmentId: installment.id },
       },
       {
@@ -390,7 +430,10 @@ export class PaymentService {
 
   async triggerAutoDebit(userId: string, amount: number, metadata: any = {}) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
-    if (!user || !user.paystackAuthCode) return;
+    if (!user) return;
+
+    const defaultPaymentMethod = await this.userService.getDefaultPaymentMethod(userId);
+    if (!defaultPaymentMethod?.authorizationCode) return;
 
     const axios = (await import('axios')).default;
     const secret = this.configService.get<string>('PAYSTACK_SECRET_KEY');
@@ -400,7 +443,7 @@ export class PaymentService {
       {
         email: user.email,
         amount: amount * 100,
-        authorization_code: user.paystackAuthCode,
+        authorization_code: defaultPaymentMethod.authorizationCode,
         metadata,
       },
       {

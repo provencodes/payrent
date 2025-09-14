@@ -1,8 +1,10 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThan, Repository } from 'typeorm';
 import UserResponseDTO from './dto/user-response.dto';
 import { User } from './entities/user.entity';
+import { BankAccount } from './entities/bank-account.entity';
+import { PaymentMethod } from './entities/payment-method.entity';
 import CreateNewUserOptions from './options/CreateNewUserOptions';
 import CreateUserNoPassOption from './options/CreateUserNoPassOption';
 import UpdateUserRecordOption from './options/UpdateUserRecordOption';
@@ -10,15 +12,20 @@ import UserIdentifierOptionsType from './options/UserIdentifierOptions';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CustomHttpException } from '../../helpers/custom-http-filter';
 import * as SYS_MSG from '../../helpers/systemMessages';
-// import { UserInterface } from './interfaces/user.interface';
 import { randomBytes } from 'crypto';
 import { UpdateProfileDto } from './dto/update-user-dto';
+import { CreateBankAccountDto, UpdateBankAccountDto } from './dto/bank-account.dto';
+import { CreatePaymentMethodDto, UpdatePaymentMethodDto } from './dto/payment-method.dto';
 
 @Injectable()
 export default class UserService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(BankAccount)
+    private bankAccountRepository: Repository<BankAccount>,
+    @InjectRepository(PaymentMethod)
+    private paymentMethodRepository: Repository<PaymentMethod>,
   ) {}
 
   async createUser(createUserPayload: CreateNewUserOptions) {
@@ -276,5 +283,180 @@ export default class UserService {
         })),
       },
     };
+  }
+
+  async addBankAccount(userId: string, createBankAccountDto: CreateBankAccountDto) {
+    const user = await this.getUserById(userId);
+    
+    const existingAccount = await this.bankAccountRepository.findOne({
+      where: {
+        userId,
+        accountNumber: createBankAccountDto.accountNumber,
+        bankCode: createBankAccountDto.bankCode,
+      },
+    });
+
+    if (existingAccount) {
+      throw new BadRequestException('Bank account already exists');
+    }
+
+    const bankAccount = this.bankAccountRepository.create({
+      ...createBankAccountDto,
+      userId,
+    });
+
+    const saved = await this.bankAccountRepository.save(bankAccount);
+    return {
+      message: 'Bank account added successfully',
+      data: saved,
+    };
+  }
+
+  async getBankAccounts(userId: string) {
+    const accounts = await this.bankAccountRepository.find({
+      where: { userId, isActive: true },
+      order: { createdAt: 'DESC' },
+    });
+
+    return {
+      message: 'Bank accounts fetched successfully',
+      data: accounts,
+    };
+  }
+
+  async updateBankAccount(userId: string, accountId: string, updateBankAccountDto: UpdateBankAccountDto) {
+    const account = await this.bankAccountRepository.findOne({
+      where: { id: accountId, userId },
+    });
+
+    if (!account) {
+      throw new NotFoundException('Bank account not found');
+    }
+
+    Object.assign(account, updateBankAccountDto);
+    const updated = await this.bankAccountRepository.save(account);
+
+    return {
+      message: 'Bank account updated successfully',
+      data: updated,
+    };
+  }
+
+  async deleteBankAccount(userId: string, accountId: string) {
+    const account = await this.bankAccountRepository.findOne({
+      where: { id: accountId, userId },
+    });
+
+    if (!account) {
+      throw new NotFoundException('Bank account not found');
+    }
+
+    await this.bankAccountRepository.remove(account);
+    return {
+      message: 'Bank account deleted successfully',
+    };
+  }
+
+  async getDefaultBankAccount(userId: string): Promise<BankAccount | null> {
+    return await this.bankAccountRepository.findOne({
+      where: { userId, autoCharge: true, isActive: true },
+    });
+  }
+
+  async addPaymentMethod(userId: string, createPaymentMethodDto: CreatePaymentMethodDto) {
+    const user = await this.getUserById(userId);
+    
+    const existingMethod = await this.paymentMethodRepository.findOne({
+      where: {
+        userId,
+        authorizationCode: createPaymentMethodDto.authorizationCode,
+      },
+    });
+
+    if (existingMethod) {
+      throw new BadRequestException('Payment method already exists');
+    }
+
+    if (createPaymentMethodDto.isDefault) {
+      await this.paymentMethodRepository.update(
+        { userId, isDefault: true },
+        { isDefault: false }
+      );
+    }
+
+    const paymentMethod = this.paymentMethodRepository.create({
+      ...createPaymentMethodDto,
+      userId,
+    });
+
+    const saved = await this.paymentMethodRepository.save(paymentMethod);
+    return {
+      message: 'Payment method added successfully',
+      data: saved,
+    };
+  }
+
+  async getPaymentMethods(userId: string) {
+    const methods = await this.paymentMethodRepository.find({
+      where: { userId, isActive: true },
+      order: { isDefault: 'DESC', createdAt: 'DESC' },
+    });
+
+    return {
+      message: 'Payment methods fetched successfully',
+      data: methods,
+    };
+  }
+
+  async updatePaymentMethod(userId: string, methodId: string, updatePaymentMethodDto: UpdatePaymentMethodDto) {
+    const method = await this.paymentMethodRepository.findOne({
+      where: { id: methodId, userId },
+    });
+
+    if (!method) {
+      throw new NotFoundException('Payment method not found');
+    }
+
+    if (updatePaymentMethodDto.isDefault) {
+      await this.paymentMethodRepository.update(
+        { userId, isDefault: true },
+        { isDefault: false }
+      );
+    }
+
+    Object.assign(method, updatePaymentMethodDto);
+    const updated = await this.paymentMethodRepository.save(method);
+
+    return {
+      message: 'Payment method updated successfully',
+      data: updated,
+    };
+  }
+
+  async deletePaymentMethod(userId: string, methodId: string) {
+    const method = await this.paymentMethodRepository.findOne({
+      where: { id: methodId, userId },
+    });
+
+    if (!method) {
+      throw new NotFoundException('Payment method not found');
+    }
+
+    await this.paymentMethodRepository.remove(method);
+    return {
+      message: 'Payment method deleted successfully',
+    };
+  }
+
+  async getDefaultPaymentMethod(userId: string): Promise<PaymentMethod | null> {
+    return await this.paymentMethodRepository.findOne({
+      where: { userId, isDefault: true, isActive: true },
+    });
+  }
+
+  async getPaymentMethodByAuthCode(userId: string, authorizationCode: string): Promise<PaymentMethod | null> {
+    return await this.paymentMethodRepository.findOne({
+      where: { userId, authorizationCode, isActive: true },
+    });
   }
 }

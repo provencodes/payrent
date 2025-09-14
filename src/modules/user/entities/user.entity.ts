@@ -11,6 +11,8 @@ import {
 } from 'typeorm';
 import { AbstractBaseEntity } from '../../../entities/base.entity';
 import { Wallet } from '../../wallet/entities/wallet.entity';
+import { BankAccount } from './bank-account.entity';
+import { PaymentMethod } from './payment-method.entity';
 
 export enum UserType {
   LANDLORD = 'landlord',
@@ -81,15 +83,6 @@ export class User extends AbstractBaseEntity {
   @Column({ nullable: true, type: 'text' })
   idDocument: string;
 
-  @Column({ nullable: true, type: 'text' })
-  accountNumber: string;
-
-  @Column({ nullable: true, type: 'text' })
-  accountName: string;
-
-  @Column({ nullable: true, type: 'text' })
-  bankName: string;
-
   @Column('jsonb', { nullable: true })
   profilePicture: FileObject;
 
@@ -103,17 +96,17 @@ export class User extends AbstractBaseEntity {
   })
   userType: UserType;
 
-  @Column({ nullable: true, type: 'text' })
-  paystackAuthCode: string;
-
-  @Column({ nullable: true, default: false })
-  autoCharge: boolean;
-
   @OneToMany(() => Installment, (installment) => installment.user)
   installments: Installment[];
 
   @OneToOne(() => Wallet, (wallet) => wallet.user)
   wallet: Wallet;
+
+  @OneToMany(() => BankAccount, (bankAccount) => bankAccount.user)
+  bankAccounts: BankAccount[];
+
+  @OneToMany(() => PaymentMethod, (paymentMethod) => paymentMethod.user)
+  paymentMethods: PaymentMethod[];
 
   @Column({ nullable: true })
   otp: string;

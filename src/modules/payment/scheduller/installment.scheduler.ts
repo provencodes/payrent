@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Installment } from '../entities/installment.entity';
 import { PaymentService } from '../payment.service';
+import UserService from '../../user/user.service';
 
 @Injectable()
 export class InstallmentScheduler {
@@ -12,6 +13,7 @@ export class InstallmentScheduler {
     @InjectRepository(Installment)
     private readonly installmentRepo: Repository<Installment>,
     private readonly paymentService: PaymentService,
+    private readonly userService: UserService,
   ) {}
 
   @Cron('0 0 * * *') // every day at midnight
@@ -21,6 +23,7 @@ export class InstallmentScheduler {
 
     const due = await this.installmentRepo.find({
       where: { nextPaymentDate: today, paid: false },
+      relations: ['user', 'paymentMethod'],
     });
 
     for (const installment of due) {
@@ -28,7 +31,7 @@ export class InstallmentScheduler {
         `Installment due for user: ${installment.user.id} on ${today.toDateString()}`,
       );
 
-      if (installment.user.autoCharge) {
+      if (installment.paymentMethod?.reusable) {
         await this.paymentService.autoDebitUser(installment);
       } else {
         console.log(`Reminder sent to user: ${installment.user.email}`);

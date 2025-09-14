@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
 } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
+import { PaymentMethod } from '../../user/entities/payment-method.entity';
 
 @Entity()
 export class Installment {
@@ -49,8 +50,11 @@ export class Installment {
   @Column()
   subscriptionCode: string;
 
-  @Column()
-  authorizationCode: string;
+  @Column({ nullable: true })
+  paymentMethodId: string;
+
+  @ManyToOne(() => PaymentMethod, { nullable: true })
+  paymentMethod: PaymentMethod;
 
   @Column()
   customerCode: string;

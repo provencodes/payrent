@@ -7,6 +7,7 @@ import {
 import { PaymentService } from '../../modules/payment/payment.service';
 import { WalletService } from '../../modules/wallet/wallet.service';
 import { PaymentOption } from '../../modules/landlord/dto/commercial.dto';
+import UserService from '../../modules/user/user.service';
 
 export interface PaymentRequest {
   userId: string;
@@ -42,6 +43,8 @@ export class PaymentProcessorService {
     private readonly paymentService: PaymentService,
     @Inject(forwardRef(() => WalletService))
     private readonly walletService: WalletService,
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: UserService,
   ) {}
 
   async processPayment(
@@ -122,20 +125,27 @@ export class PaymentProcessorService {
     user: any,
     property?: any,
   ): Promise<PaymentResponse> {
-    if (!request.accountNumber || !request.bankCode) {
-      throw new BadRequestException(
-        'Account number and bank code are required',
-      );
+    let accountNumber = request.accountNumber;
+    let bankCode = request.bankCode;
+
+    if (!accountNumber || !bankCode) {
+      const defaultBankAccount = await this.userService.getDefaultBankAccount(request.userId);
+      if (!defaultBankAccount) {
+        throw new BadRequestException('No bank account found. Please add a bank account or provide account details.');
+      }
+      accountNumber = defaultBankAccount.accountNumber;
+      bankCode = defaultBankAccount.bankCode;
     }
 
     const channels = ['bank'];
+    const requestWithBankDetails = { ...request, accountNumber, bankCode };
 
     if (property) {
       const res = await this.paymentService.landLordInvest(
         user,
         property,
         request.amount,
-        request,
+        requestWithBankDetails,
         channels,
       );
       return {

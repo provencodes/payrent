@@ -14,6 +14,8 @@ import { GoogleStrategy } from './strategies/google.strategy';
 import { EmailService } from '../mailer/mailer.service';
 import { WalletModule } from '../wallet/wallet.module';
 import { WalletTransaction } from '../wallet/entities/wallet-transaction.entity';
+import { BankAccount } from '../user/entities/bank-account.entity';
+import { PaymentMethod } from '../user/entities/payment-method.entity';
 
 @Module({
   controllers: [RegistrationController],
@@ -27,7 +29,12 @@ import { WalletTransaction } from '../wallet/entities/wallet-transaction.entity'
     EmailService,
   ],
   imports: [
-    TypeOrmModule.forFeature([User, WalletTransaction]),
+    TypeOrmModule.forFeature([
+      User,
+      WalletTransaction,
+      BankAccount,
+      PaymentMethod,
+    ]),
     PassportModule,
     WalletModule,
     JwtModule.register({

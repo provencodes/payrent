@@ -5,6 +5,8 @@ import { FinancialController } from './financial.controller';
 import { UserFinancialService } from './user-financial.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
+import { BankAccount } from './entities/bank-account.entity';
+import { PaymentMethod } from './entities/payment-method.entity';
 import { Payment } from '../payment/entities/payment.entity';
 import { WalletTransaction } from '../wallet/entities/wallet-transaction.entity';
 import { Wallet } from '../wallet/entities/wallet.entity';
@@ -18,6 +20,8 @@ import { LoanApplication } from '../tenant/entities/loan-application.entity';
   imports: [
     TypeOrmModule.forFeature([
       User,
+      BankAccount,
+      PaymentMethod,
       Payment,
       WalletTransaction,
       Wallet,
