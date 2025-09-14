@@ -21,7 +21,10 @@ import { CreatePlanType } from './gateways/gateway.interface';
 import { Rental } from '../property/entities/rental.entity';
 import { Property } from '../property/entities/property.entity';
 import { DataSource } from 'typeorm';
-import { PaymentMethod, PaymentMethodType } from '../user/entities/payment-method.entity';
+import {
+  PaymentMethod,
+  PaymentMethodType,
+} from '../user/entities/payment-method.entity';
 
 @Injectable()
 export class PaymentService {
@@ -153,10 +156,11 @@ export class PaymentService {
 
       // Store payment method if it's a card payment
       if (data.authorization && data.authorization.authorization_code) {
-        const existingMethod = await this.userService.getPaymentMethodByAuthCode(
-          metadata.userId,
-          data.authorization.authorization_code
-        );
+        const existingMethod =
+          await this.userService.getPaymentMethodByAuthCode(
+            metadata.userId,
+            data.authorization.authorization_code,
+          );
 
         if (!existingMethod) {
           await this.userService.addPaymentMethod(metadata.userId, {
@@ -178,12 +182,15 @@ export class PaymentService {
           userId: metadata.userId,
           propertyId: metadata.propertyId,
           investmentType: metadata.investmentType,
-          shares: metadata?.shares,
+          shares:
+            metadata?.shares && metadata.shares !== ''
+              ? Number(metadata.shares)
+              : null,
           amount: amount,
           reference,
           email: email,
           status: 'success',
-          paidAt: data.paid_at, //new Date(data.paid_at * 1000),
+          paidAt: data.paid_at,
           customerCode: data.customer.customer_code,
         });
       }
@@ -215,21 +222,24 @@ export class PaymentService {
         // Get or create payment method
         let paymentMethod = await this.userService.getPaymentMethodByAuthCode(
           metadata.userId,
-          data.authorization.authorization_code
+          data.authorization.authorization_code,
         );
 
         if (!paymentMethod) {
-          const result = await this.userService.addPaymentMethod(metadata.userId, {
-            authorizationCode: data.authorization.authorization_code,
-            last4: data.authorization.last4,
-            cardType: data.authorization.card_type,
-            bank: data.authorization.bank,
-            brand: data.authorization.brand,
-            expMonth: data.authorization.exp_month,
-            expYear: data.authorization.exp_year,
-            reusable: data.authorization.reusable,
-            type: PaymentMethodType.CARD,
-          });
+          const result = await this.userService.addPaymentMethod(
+            metadata.userId,
+            {
+              authorizationCode: data.authorization.authorization_code,
+              last4: data.authorization.last4,
+              cardType: data.authorization.card_type,
+              bank: data.authorization.bank,
+              brand: data.authorization.brand,
+              expMonth: data.authorization.exp_month,
+              expYear: data.authorization.exp_year,
+              reusable: data.authorization.reusable,
+              type: PaymentMethodType.CARD,
+            },
+          );
           paymentMethod = result.data;
         }
 
@@ -284,10 +294,11 @@ export class PaymentService {
 
       // Store payment method if it's a card payment
       if (data.authorization && data.authorization.authorization_code) {
-        const existingMethod = await this.userService.getPaymentMethodByAuthCode(
-          metadata.userId,
-          data.authorization.authorization_code
-        );
+        const existingMethod =
+          await this.userService.getPaymentMethodByAuthCode(
+            metadata.userId,
+            data.authorization.authorization_code,
+          );
 
         if (!existingMethod) {
           await this.userService.addPaymentMethod(metadata.userId, {
@@ -309,7 +320,10 @@ export class PaymentService {
           userId: metadata.userId,
           propertyId: metadata.propertyId,
           investmentType: metadata.investmentType,
-          shares: metadata?.shares,
+          shares:
+            metadata?.shares && metadata.shares !== ''
+              ? Number(metadata.shares)
+              : null,
           amount: amount,
           reference,
           email: email,
@@ -432,7 +446,8 @@ export class PaymentService {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) return;
 
-    const defaultPaymentMethod = await this.userService.getDefaultPaymentMethod(userId);
+    const defaultPaymentMethod =
+      await this.userService.getDefaultPaymentMethod(userId);
     if (!defaultPaymentMethod?.authorizationCode) return;
 
     const axios = (await import('axios')).default;
