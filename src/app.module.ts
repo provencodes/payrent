@@ -12,8 +12,7 @@ import HealthController from './health.controller';
 import ProbeController from './probe.controller';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
-import { MailerModule } from '@nestjs-modules/mailer';
-import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
+import { MailerModule as CustomMailerModule } from './modules/mailer/mailer.module';
 import { PropertyModule } from './modules/property/property.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { PaymentModule } from './modules/payment/payment.module';
@@ -92,38 +91,7 @@ const profile = process.env.PROFILE;
     LegalModule,
     // WalletModule,
     TenantModule,
-    MailerModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        transport: {
-          host: configService.get<string>('SMTP_HOST'),
-          port: configService.get<number>('SMTP_PORT'),
-          auth: {
-            user: configService.get<string>('SMTP_USER'),
-            pass: configService.get<string>('SMTP_PASSWORD'),
-          },
-        },
-        defaults: {
-          from: `"payrent Admin" <${configService.get<string>('SMTP_USER')}>`,
-        },
-        template: {
-          dir: process.cwd() + '/src/templates',
-          adapter: new HandlebarsAdapter(),
-          options: {
-            strict: true,
-          },
-        },
-        options: {
-          partials: {
-            dir: process.cwd() + '/src/templates/partials',
-            options: {
-              strict: true,
-            },
-          },
-        },
-      }),
-      inject: [ConfigService],
-    }),
+    CustomMailerModule,
   ],
   controllers: [HealthController, ProbeController],
 })

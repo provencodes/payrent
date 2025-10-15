@@ -128,15 +128,6 @@ export default class AuthenticationService {
       //   otpCooldownExpires,
       // );
 
-      const user = await this.userService.createUser(
-        Object.assign(createUserDto, {
-          otp: hashedOtp,
-          otpCooldownExpires,
-          referralCode,
-          referredBy: referrer || null,
-        }),
-      );
-
       // const sendMailDto: SendMailDto = {
       //   to: createUserDto.email,
       //   subject: 'OTP VERIFICATION',
@@ -157,6 +148,15 @@ export default class AuthenticationService {
         },
       };
       await this.emailService.sendEMail(sendMailDto);
+      
+      const user = await this.userService.createUser(
+        Object.assign(createUserDto, {
+          otp: hashedOtp,
+          otpCooldownExpires,
+          referralCode,
+          referredBy: referrer || null,
+        }),
+      );
 
       await this.walletService.getOrCreateWallet(user.id);
 
@@ -166,7 +166,9 @@ export default class AuthenticationService {
           const referrerWallet = await this.walletService.getOrCreateWallet(
             referrer.id,
           );
-          const bonusAmount = this.configService.get('finance.referralBonusKobo');
+          const bonusAmount = this.configService.get(
+            'finance.referralBonusKobo',
+          );
 
           // Credit the referrer's wallet
           referrerWallet.balanceKobo = (
