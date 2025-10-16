@@ -44,8 +44,9 @@ export class EmailService {
       return data;
     } catch (e) {
       this.logger.error(
-        `Could not send email to ${to}, Message: ${e.message}, Stack: ${e.stack}`,
+        `Resend API Error - Could not send email to ${to}, Message: ${e.message}, Stack: ${e.stack}`,
       );
+      this.logger.error(`Resend API Key configured: ${!!this.configService.get<string>('MAIL_API_KEY')}`);
       throw new CustomHttpException(
         FAILED_TO_SEND_EMAIL,
         HttpStatus.INTERNAL_SERVER_ERROR,
