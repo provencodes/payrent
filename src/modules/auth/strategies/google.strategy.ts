@@ -32,20 +32,21 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
         throw new Error('No email associated with this Google account');
       }
 
-      const user = {
+      const userData = {
         email: emails[0].value,
-        username: emails[0].value.split('@')[0],
+        name: profile.displayName || emails[0].value.split('@')[0],
         password: '',
-        is_active: true,
-        secret: '',
+        isActive: true,
+        isEmailVerified: true,
+        userType: 'tenant',
       };
 
       let existingUser = await this.userRepository.findOne({
-        where: { email: user.email },
+        where: { email: userData.email },
       });
 
       if (!existingUser) {
-        existingUser = this.userRepository.create(user);
+        existingUser = this.userRepository.create(userData);
         await this.userRepository.save(existingUser);
       }
 
