@@ -17,8 +17,8 @@ const dataSource = new DataSource({
   host: process.env.DB_HOST,
   port: +process.env.DB_PORT,
   database: process.env.DB_NAME,
-  entities: [process.env.DB_ENTITIES],
-  migrations: [process.env.DB_MIGRATIONS],
+  entities: isDevelopment ? ['src/modules/**/entities/*.entity.ts'] : [process.env.DB_ENTITIES],
+  migrations: isDevelopment ? ['src/migrations/*.ts'] : [process.env.DB_MIGRATIONS],
   synchronize: isDevelopment,
   migrationsTableName: 'migrations',
   ssl: isLocalDb

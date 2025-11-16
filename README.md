@@ -131,7 +131,21 @@ yarn build
 yarn start:prod
 ```
 
-### 6. Access the Application
+### 6. Seed the Database (Optional)
+
+For testing purposes, you can seed the database with sample data:
+
+```bash
+# Quick seeding with sample users and wallets
+node simple-seed.js
+```
+
+This creates:
+- **Admin User**: `admin@payrent.com` / `password123`
+- **Landlord User**: `landlord@payrent.com` / `password123` (₦5M wallet)
+- **Tenant User**: `tenant@payrent.com` / `password123` (₦100K wallet)
+
+### 7. Access the Application
 
 - **API**: <http://localhost:3000>
 - **Swagger Documentation**: <http://localhost:3000/api>
