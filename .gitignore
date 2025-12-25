@@ -58,3 +58,8 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 # DB certificate file
 ca.pem
 .cursorrules
+
+schema_dump.sql
+payRent_DB_ER.png
+payRentDB_ER.pdf
+PAYRENT_FRD_IMPLEMENTATION_ANALYSIS.md
