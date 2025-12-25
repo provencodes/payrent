@@ -8,7 +8,7 @@ import {
   Min,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PaymentType } from 'src/modules/property/dto/create-property.dto';
+import { PaymentType } from '../../property/dto/create-property.dto';
 
 export enum InvestType {
   SHARES = 'shares',

@@ -19,7 +19,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { skipAuth } from 'src/helpers/skipAuth';
+import { skipAuth } from '../../helpers/skipAuth';
 import { PaystackCallbackDto, VerifyAccountDto } from './dto/paystack.dto';
 
 @ApiTags('Payment')
