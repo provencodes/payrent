@@ -17,6 +17,8 @@ import { WalletTransaction } from '../wallet/entities/wallet-transaction.entity'
 import { BankAccount } from '../user/entities/bank-account.entity';
 import { PaymentMethod } from '../user/entities/payment-method.entity';
 
+import { RefreshToken } from './entities/refresh-token.entity';
+
 @Module({
   controllers: [RegistrationController],
   providers: [
@@ -34,6 +36,7 @@ import { PaymentMethod } from '../user/entities/payment-method.entity';
       WalletTransaction,
       BankAccount,
       PaymentMethod,
+      RefreshToken,
     ]),
     PassportModule,
     WalletModule,
@@ -45,4 +48,4 @@ import { PaymentMethod } from '../user/entities/payment-method.entity';
   ],
   exports: [],
 })
-export class AuthModule {}
+export class AuthModule { }

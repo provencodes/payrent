@@ -15,4 +15,11 @@ export default registerAs('auth', () => ({
     appID: process.env.FACEBOOK_APP_ID,
     appSecret: process.env.FACEBOOK_APP_SECRET,
   },
+  apple: {
+    teamId: process.env.APPLE_TEAM_ID,
+    clientId: process.env.APPLE_CLIENT_ID,
+    keyId: process.env.APPLE_KEY_ID,
+    privateKey: process.env.APPLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    callbackURL: process.env.APPLE_CALLBACK_URL,
+  },
 }));

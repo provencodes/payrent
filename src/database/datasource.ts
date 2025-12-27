@@ -17,15 +17,15 @@ const dataSource = new DataSource({
   host: process.env.DB_HOST,
   port: +process.env.DB_PORT,
   database: process.env.DB_NAME,
-  entities: isDevelopment ? ['src/modules/**/entities/*.entity.ts'] : [process.env.DB_ENTITIES],
-  migrations: isDevelopment ? ['src/migrations/*.ts'] : [process.env.DB_MIGRATIONS],
+  entities: ['dist/src/modules/**/entities/*.entity.js'],
+  migrations: ['dist/src/migrations/*.js'],
   synchronize: isDevelopment,
   migrationsTableName: 'migrations',
   ssl: isLocalDb
     ? false
     : {
-        rejectUnauthorized: false,
-      },
+      rejectUnauthorized: false,
+    },
 });
 export async function initializeDataSource() {
   if (!dataSource.isInitialized) {

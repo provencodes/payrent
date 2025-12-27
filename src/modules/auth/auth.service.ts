@@ -1,8 +1,7 @@
 import { ForbiddenException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-// import * as path from 'path';
-// import * as fs from 'fs';
+import * as crypto from 'crypto';
 import { TokenPayload } from 'google-auth-library';
 import authConfig from '../../../config/auth.config';
 import { CustomHttpException } from '../../helpers/custom-http-filter';
@@ -14,7 +13,6 @@ import UserService from '../user/user.service';
 import { CreateUserDTO } from './dto/create-user.dto';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { LoginDto } from './dto/login.dto';
-// import GoogleAuthPayload from './interfaces/GoogleAuthPayloadInterface';
 import { SendMailDto } from '../mailer/dto/send-mail.dto';
 import { EmailService } from '../mailer/mailer.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -22,7 +20,7 @@ import { RequestUser } from './interfaces/request.userdto';
 import { randomInt } from 'crypto';
 import { UserInterface } from '../user/interfaces/user.interface';
 import FacebookAuthPayload from './interfaces/FacebookAuthPayloadInterface';
-import { addMinutes, isBefore } from 'date-fns';
+import { addMinutes, addDays, isBefore } from 'date-fns';
 import { User } from '../user/entities/user.entity';
 import UserIdentifierOptionsType from '../user/options/UserIdentifierOptions';
 import UpdateUserRecordOption from '../user/options/UpdateUserRecordOption';
@@ -32,12 +30,17 @@ import UserResponseDTO from '../user/dto/user-response.dto';
 import { WalletService } from '../wallet/wallet.service';
 import { GoogleAuthPayloadDto } from './dto/google-auth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import { WalletTransaction } from '../wallet/entities/wallet-transaction.entity';
 import { ConfigService } from '@nestjs/config';
+import { RefreshToken } from './entities/refresh-token.entity';
+import * as appleSignIn from 'apple-signin-auth';
+import { AppleAuthPayloadDto } from './dto/apple-auth.dto';
 
 @Injectable()
 export default class AuthenticationService {
+  private readonly REFRESH_TOKEN_EXPIRY_DAYS = 7;
+
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
@@ -47,7 +50,9 @@ export default class AuthenticationService {
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(WalletTransaction)
     private walletTransactionRepository: Repository<WalletTransaction>,
-  ) {}
+    @InjectRepository(RefreshToken)
+    private refreshTokenRepository: Repository<RefreshToken>,
+  ) { }
 
   async createNewUser(createUserDto: CreateUserDTO) {
     try {
@@ -148,7 +153,7 @@ export default class AuthenticationService {
         },
       };
       await this.emailService.sendEMail(sendMailDto);
-      
+
       const user = await this.userService.createUser(
         Object.assign(createUserDto, {
           otp: hashedOtp,
@@ -358,11 +363,13 @@ export default class AuthenticationService {
         email: userEmail,
         name: userName,
       });
+      const refreshToken = await this.generateRefreshToken(createdUser.id);
 
       return {
         message:
           'User created successfully, please check your mail for verification!',
         access_token: accessToken,
+        refresh_token: refreshToken,
         data: {
           user: {
             id: createdUser.id,
@@ -376,6 +383,7 @@ export default class AuthenticationService {
     }
 
     const accessToken = this.signJWT(userExists);
+    const refreshToken = await this.generateRefreshToken(userExists.id);
 
     return {
       message: LOGIN_SUCCESSFUL,
@@ -388,6 +396,7 @@ export default class AuthenticationService {
         },
       },
       access_token: accessToken,
+      refresh_token: refreshToken,
       status_code: HttpStatus.OK,
     };
   }
@@ -470,9 +479,11 @@ export default class AuthenticationService {
       }
 
       const access_token = this.signJWT(user);
+      const refresh_token = await this.generateRefreshToken(user.id);
 
       const responsePayload = {
         access_token,
+        refresh_token,
         data: {
           user: {
             id: user.id,
@@ -539,10 +550,6 @@ export default class AuthenticationService {
         name: userName,
         password: '',
       };
-      const accessToken = this.jwtService.sign({
-        email: userEmail,
-        username: userName,
-      });
       const sendMailDto = {
         to: userEmail,
         subject: 'Email Verification',
@@ -561,10 +568,17 @@ export default class AuthenticationService {
         }),
       );
 
+      const accessToken = this.jwtService.sign({
+        email: userEmail,
+        username: userName,
+      });
+      const refreshToken = await this.generateRefreshToken(createdUser.id);
+
       return {
         message:
           'User created successfully, please check your mail for verification!',
         access_token: accessToken,
+        refresh_token: refreshToken,
         data: {
           user: {
             id: createdUser.id,
@@ -578,6 +592,7 @@ export default class AuthenticationService {
     }
 
     const accessToken = this.signJWT(userExists);
+    const refreshToken = await this.generateRefreshToken(userExists.id);
 
     return {
       message: LOGIN_SUCCESSFUL,
@@ -590,8 +605,153 @@ export default class AuthenticationService {
         },
       },
       access_token: accessToken,
+      refresh_token: refreshToken,
       status_code: HttpStatus.OK,
     };
+  }
+
+  async appleAuth(appleAuthPayload: AppleAuthPayloadDto) {
+    try {
+      // Verify the identity token with Apple
+      const appleConfig = authConfig().apple;
+      const tokenPayload = await appleSignIn.verifyIdToken(
+        appleAuthPayload.identityToken,
+        {
+          audience: appleConfig.clientId,
+          nonce: appleAuthPayload.nonce,
+        },
+      );
+
+      const userEmail = tokenPayload.email;
+
+      // Check if email is hidden (relay address)
+      if (
+        !userEmail ||
+        userEmail.endsWith('@privaterelay.appleid.com')
+      ) {
+        throw new CustomHttpException(
+          'Real email is required. Please disable "Hide My Email" and try again.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      // Check if user already exists
+      const userExists = await this.userService.getUserRecord({
+        identifier: userEmail,
+        identifierType: 'email',
+      });
+
+      if (!userExists) {
+        // New user - extract name or generate from email
+        let userName: string;
+
+        if (appleAuthPayload.user?.name) {
+          const { firstName, lastName } = appleAuthPayload.user.name;
+          const namePayload =
+            [firstName, lastName].filter(Boolean).join(' ') || null;
+          userName = namePayload
+            ? await this.generateUniqueUsername(namePayload.replace(/\s+/g, ''))
+            : await this.generateUsernameFromEmail(userEmail);
+        } else {
+          // Apple only sends name on first login, generate from email
+          userName = await this.generateUsernameFromEmail(userEmail);
+        }
+
+        const currentTime = new Date();
+        const otp = await this.generateOtp();
+        const hashedOtp = await this.hashOtp(otp);
+        const otpCooldownExpires = new Date(
+          currentTime.getTime() + 1 * 60 * 1000,
+        );
+
+        const userCreationPayload = {
+          email: userEmail,
+          name: userName,
+          password: '',
+          userType: appleAuthPayload.userType,
+        };
+
+        const sendMailDto = {
+          to: userEmail,
+          subject: 'Email Verification',
+          template: 'email-verification',
+          context: {
+            name: userName,
+            verifyEmailIllustration: 'https://i.ibb.co/wLNf8sx/image.png',
+            otp,
+          },
+        };
+        await this.emailService.sendEMail(sendMailDto);
+
+        const createdUser = await this.userService.createUser(
+          Object.assign(userCreationPayload, {
+            otp: hashedOtp,
+            otpCooldownExpires,
+          }),
+        );
+
+        const accessToken = this.jwtService.sign({
+          sub: createdUser.id,
+          email: userEmail,
+          name: userName,
+        });
+        const refreshToken = await this.generateRefreshToken(createdUser.id);
+
+        return {
+          message:
+            'User created successfully, please check your mail for verification!',
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          data: {
+            user: {
+              id: createdUser.id,
+              email: createdUser.email || '',
+              name: createdUser.name || '',
+              profilePicture: createdUser?.profilePicture,
+            },
+          },
+          status_code: HttpStatus.CREATED,
+        };
+      }
+
+      // Existing user - login
+      const accessToken = this.signJWT(userExists);
+      const refreshToken = await this.generateRefreshToken(userExists.id);
+
+      return {
+        message: LOGIN_SUCCESSFUL,
+        data: {
+          user: {
+            id: userExists.id,
+            email: userExists.email || '',
+            name: userExists.name || '',
+            profilePicture: userExists?.profilePicture,
+          },
+        },
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        status_code: HttpStatus.OK,
+      };
+    } catch (error) {
+      if (error instanceof CustomHttpException) {
+        throw error;
+      }
+      console.error('Apple auth error:', error);
+      throw new CustomHttpException(
+        'Apple authentication failed',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  /**
+   * Generate a username from email address
+   */
+  private async generateUsernameFromEmail(email: string): Promise<string> {
+    const localPart = email.split('@')[0];
+    // Remove special characters and make it username-friendly
+    const cleanedName = localPart.replace(/[^a-zA-Z0-9]/g, '');
+    return await this.generateUniqueUsername(cleanedName || 'user');
   }
 
   async sendResetPasswordPin(email: string) {
@@ -789,6 +949,157 @@ export default class AuthenticationService {
       userId,
       changePasswordDto,
     );
+    // Revoke all refresh tokens on password change for security
+    await this.revokeAllUserRefreshTokens(userId);
     return response;
+  }
+
+  // ==================== REFRESH TOKEN METHODS ====================
+
+  /**
+   * Generate a new refresh token and store it in the database
+   */
+  async generateRefreshToken(
+    userId: string,
+    userAgent?: string,
+    ipAddress?: string,
+  ): Promise<string> {
+    // Generate a random token
+    const rawToken = crypto.randomBytes(64).toString('hex');
+
+    // Hash the token for storage (we only store hash, return raw)
+    const hashedToken = await bcrypt.hash(rawToken, 10);
+
+    // Calculate expiry date (7 days from now)
+    const expiresAt = addDays(new Date(), this.REFRESH_TOKEN_EXPIRY_DAYS);
+
+    // Store in database
+    const refreshToken = this.refreshTokenRepository.create({
+      token: hashedToken,
+      userId,
+      expiresAt,
+      userAgent,
+      ipAddress,
+    });
+    await this.refreshTokenRepository.save(refreshToken);
+
+    return rawToken;
+  }
+
+  /**
+   * Validate a refresh token and rotate it (issue new one, revoke old)
+   */
+  async validateAndRotateRefreshToken(
+    rawToken: string,
+    userAgent?: string,
+    ipAddress?: string,
+  ): Promise<{ accessToken: string; refreshToken: string; user: User }> {
+    // Find all non-revoked, non-expired tokens
+    const validTokens = await this.refreshTokenRepository.find({
+      where: {
+        isRevoked: false,
+        expiresAt: MoreThan(new Date()),
+      },
+      relations: ['user'],
+    });
+
+    // Check if any token matches
+    let matchedToken: RefreshToken | null = null;
+    for (const token of validTokens) {
+      const isMatch = await bcrypt.compare(rawToken, token.token);
+      if (isMatch) {
+        matchedToken = token;
+        break;
+      }
+    }
+
+    if (!matchedToken) {
+      throw new CustomHttpException(
+        'Invalid or expired refresh token',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    // Revoke the old token
+    matchedToken.isRevoked = true;
+    await this.refreshTokenRepository.save(matchedToken);
+
+    // Generate new tokens
+    const newAccessToken = this.signJWT(matchedToken.user);
+    const newRefreshToken = await this.generateRefreshToken(
+      matchedToken.userId,
+      userAgent,
+      ipAddress,
+    );
+
+    return {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+      user: matchedToken.user,
+    };
+  }
+
+  /**
+   * Revoke a specific refresh token (logout from single device)
+   */
+  async revokeRefreshToken(rawToken: string): Promise<boolean> {
+    const validTokens = await this.refreshTokenRepository.find({
+      where: {
+        isRevoked: false,
+      },
+    });
+
+    for (const token of validTokens) {
+      const isMatch = await bcrypt.compare(rawToken, token.token);
+      if (isMatch) {
+        token.isRevoked = true;
+        await this.refreshTokenRepository.save(token);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Revoke all refresh tokens for a user (logout from all devices)
+   */
+  async revokeAllUserRefreshTokens(userId: string): Promise<number> {
+    const result = await this.refreshTokenRepository.update(
+      { userId, isRevoked: false },
+      { isRevoked: true },
+    );
+    return result.affected || 0;
+  }
+
+  /**
+   * Get active sessions count for a user
+   */
+  async getActiveSessionsCount(userId: string): Promise<number> {
+    return await this.refreshTokenRepository.count({
+      where: {
+        userId,
+        isRevoked: false,
+        expiresAt: MoreThan(new Date()),
+      },
+    });
+  }
+
+  /**
+   * Cleanup expired tokens (can be called by a cron job)
+   */
+  async cleanupExpiredTokens(): Promise<number> {
+    const result = await this.refreshTokenRepository.delete({
+      expiresAt: isBefore(new Date(), new Date()) ? undefined : undefined,
+    });
+    // Alternative: soft delete by marking as revoked
+    const updateResult = await this.refreshTokenRepository
+      .createQueryBuilder()
+      .update(RefreshToken)
+      .set({ isRevoked: true })
+      .where('expiresAt < :now', { now: new Date() })
+      .andWhere('isRevoked = :isRevoked', { isRevoked: false })
+      .execute();
+    return updateResult.affected || 0;
   }
 }
