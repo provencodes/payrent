@@ -13,7 +13,14 @@ import { Property } from '../property/entities/property.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Payment, Installment, User, Plan, Rental, Property]),
+    TypeOrmModule.forFeature([
+      Payment,
+      Installment,
+      User,
+      Plan,
+      Rental,
+      Property,
+    ]),
     UserModule,
   ],
   controllers: [PaymentController],

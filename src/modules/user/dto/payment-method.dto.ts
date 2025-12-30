@@ -47,7 +47,10 @@ export class CreatePaymentMethodDto {
   @IsBoolean()
   isDefault?: boolean;
 
-  @ApiPropertyOptional({ enum: PaymentMethodType, example: PaymentMethodType.CARD })
+  @ApiPropertyOptional({
+    enum: PaymentMethodType,
+    example: PaymentMethodType.CARD,
+  })
   @IsOptional()
   @IsEnum(PaymentMethodType)
   type?: PaymentMethodType;

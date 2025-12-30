@@ -1,4 +1,9 @@
-import { HttpStatus, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThan, Repository } from 'typeorm';
 import UserResponseDTO from './dto/user-response.dto';
@@ -14,8 +19,14 @@ import { CustomHttpException } from '../../helpers/custom-http-filter';
 import * as SYS_MSG from '../../helpers/systemMessages';
 import { randomBytes } from 'crypto';
 import { UpdateProfileDto } from './dto/update-user-dto';
-import { CreateBankAccountDto, UpdateBankAccountDto } from './dto/bank-account.dto';
-import { CreatePaymentMethodDto, UpdatePaymentMethodDto } from './dto/payment-method.dto';
+import {
+  CreateBankAccountDto,
+  UpdateBankAccountDto,
+} from './dto/bank-account.dto';
+import {
+  CreatePaymentMethodDto,
+  UpdatePaymentMethodDto,
+} from './dto/payment-method.dto';
 
 @Injectable()
 export default class UserService {
@@ -285,9 +296,12 @@ export default class UserService {
     };
   }
 
-  async addBankAccount(userId: string, createBankAccountDto: CreateBankAccountDto) {
+  async addBankAccount(
+    userId: string,
+    createBankAccountDto: CreateBankAccountDto,
+  ) {
     const user = await this.getUserById(userId);
-    
+
     const existingAccount = await this.bankAccountRepository.findOne({
       where: {
         userId,
@@ -324,7 +338,11 @@ export default class UserService {
     };
   }
 
-  async updateBankAccount(userId: string, accountId: string, updateBankAccountDto: UpdateBankAccountDto) {
+  async updateBankAccount(
+    userId: string,
+    accountId: string,
+    updateBankAccountDto: UpdateBankAccountDto,
+  ) {
     const account = await this.bankAccountRepository.findOne({
       where: { id: accountId, userId },
     });
@@ -363,9 +381,12 @@ export default class UserService {
     });
   }
 
-  async addPaymentMethod(userId: string, createPaymentMethodDto: CreatePaymentMethodDto) {
+  async addPaymentMethod(
+    userId: string,
+    createPaymentMethodDto: CreatePaymentMethodDto,
+  ) {
     const user = await this.getUserById(userId);
-    
+
     const existingMethod = await this.paymentMethodRepository.findOne({
       where: {
         userId,
@@ -380,7 +401,7 @@ export default class UserService {
     if (createPaymentMethodDto.isDefault) {
       await this.paymentMethodRepository.update(
         { userId, isDefault: true },
-        { isDefault: false }
+        { isDefault: false },
       );
     }
 
@@ -408,7 +429,11 @@ export default class UserService {
     };
   }
 
-  async updatePaymentMethod(userId: string, methodId: string, updatePaymentMethodDto: UpdatePaymentMethodDto) {
+  async updatePaymentMethod(
+    userId: string,
+    methodId: string,
+    updatePaymentMethodDto: UpdatePaymentMethodDto,
+  ) {
     const method = await this.paymentMethodRepository.findOne({
       where: { id: methodId, userId },
     });
@@ -420,7 +445,7 @@ export default class UserService {
     if (updatePaymentMethodDto.isDefault) {
       await this.paymentMethodRepository.update(
         { userId, isDefault: true },
-        { isDefault: false }
+        { isDefault: false },
       );
     }
 
@@ -454,7 +479,10 @@ export default class UserService {
     });
   }
 
-  async getPaymentMethodByAuthCode(userId: string, authorizationCode: string): Promise<PaymentMethod | null> {
+  async getPaymentMethodByAuthCode(
+    userId: string,
+    authorizationCode: string,
+  ): Promise<PaymentMethod | null> {
     return await this.paymentMethodRepository.findOne({
       where: { userId, authorizationCode, isActive: true },
     });

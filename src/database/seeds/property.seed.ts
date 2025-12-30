@@ -6,7 +6,9 @@ export const seedProperties = async (dataSource: DataSource) => {
   const propertyRepository = dataSource.getRepository(Property);
   const userRepository = dataSource.getRepository(User);
 
-  const landlord = await userRepository.findOne({ where: { email: 'landlord@payrent.com' } });
+  const landlord = await userRepository.findOne({
+    where: { email: 'landlord@payrent.com' },
+  });
   if (!landlord) return;
 
   const properties = [
@@ -121,8 +123,8 @@ export const seedProperties = async (dataSource: DataSource) => {
   ];
 
   for (const propertyData of properties) {
-    const existingProperty = await propertyRepository.findOne({ 
-      where: { title: propertyData.title } 
+    const existingProperty = await propertyRepository.findOne({
+      where: { title: propertyData.title },
     });
     if (!existingProperty) {
       const property = propertyRepository.create(propertyData);

@@ -24,8 +24,8 @@ const dataSource = new DataSource({
   ssl: isLocalDb
     ? false
     : {
-      rejectUnauthorized: false,
-    },
+        rejectUnauthorized: false,
+      },
 });
 export async function initializeDataSource() {
   if (!dataSource.isInitialized) {

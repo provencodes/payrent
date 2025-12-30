@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Patch, Request, Post, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Request,
+  Post,
+  Delete,
+} from '@nestjs/common';
 import { User } from './entities/user.entity';
 import UserService from './user.service';
 import {
@@ -10,8 +19,14 @@ import {
 } from '@nestjs/swagger';
 import { UpdateProfileDto } from './dto/update-user-dto';
 import { ReferralsListResponseDto } from './dto/referrals-response.dto';
-import { CreateBankAccountDto, UpdateBankAccountDto } from './dto/bank-account.dto';
-import { CreatePaymentMethodDto, UpdatePaymentMethodDto } from './dto/payment-method.dto';
+import {
+  CreateBankAccountDto,
+  UpdateBankAccountDto,
+} from './dto/bank-account.dto';
+import {
+  CreatePaymentMethodDto,
+  UpdatePaymentMethodDto,
+} from './dto/payment-method.dto';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -79,12 +94,18 @@ export class UsersController {
     @Request() req,
     @Body() createBankAccountDto: CreateBankAccountDto,
   ) {
-    return await this.userService.addBankAccount(req.user.sub, createBankAccountDto);
+    return await this.userService.addBankAccount(
+      req.user.sub,
+      createBankAccountDto,
+    );
   }
 
   @Get('bank-accounts')
   @ApiOperation({ summary: 'Get user bank accounts' })
-  @ApiResponse({ status: 200, description: 'Bank accounts fetched successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Bank accounts fetched successfully',
+  })
   async getBankAccounts(@Request() req) {
     return await this.userService.getBankAccounts(req.user.sub);
   }
@@ -92,18 +113,28 @@ export class UsersController {
   @Patch('bank-accounts/:accountId')
   @ApiOperation({ summary: 'Update bank account' })
   @ApiBody({ type: UpdateBankAccountDto })
-  @ApiResponse({ status: 200, description: 'Bank account updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Bank account updated successfully',
+  })
   async updateBankAccount(
     @Request() req,
     @Param('accountId') accountId: string,
     @Body() updateBankAccountDto: UpdateBankAccountDto,
   ) {
-    return await this.userService.updateBankAccount(req.user.sub, accountId, updateBankAccountDto);
+    return await this.userService.updateBankAccount(
+      req.user.sub,
+      accountId,
+      updateBankAccountDto,
+    );
   }
 
   @Delete('bank-accounts/:accountId')
   @ApiOperation({ summary: 'Delete bank account' })
-  @ApiResponse({ status: 200, description: 'Bank account deleted successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Bank account deleted successfully',
+  })
   async deleteBankAccount(
     @Request() req,
     @Param('accountId') accountId: string,
@@ -114,17 +145,26 @@ export class UsersController {
   @Post('payment-methods')
   @ApiOperation({ summary: 'Add a new payment method' })
   @ApiBody({ type: CreatePaymentMethodDto })
-  @ApiResponse({ status: 201, description: 'Payment method added successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Payment method added successfully',
+  })
   async addPaymentMethod(
     @Request() req,
     @Body() createPaymentMethodDto: CreatePaymentMethodDto,
   ) {
-    return await this.userService.addPaymentMethod(req.user.sub, createPaymentMethodDto);
+    return await this.userService.addPaymentMethod(
+      req.user.sub,
+      createPaymentMethodDto,
+    );
   }
 
   @Get('payment-methods')
   @ApiOperation({ summary: 'Get user payment methods' })
-  @ApiResponse({ status: 200, description: 'Payment methods fetched successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment methods fetched successfully',
+  })
   async getPaymentMethods(@Request() req) {
     return await this.userService.getPaymentMethods(req.user.sub);
   }
@@ -132,18 +172,28 @@ export class UsersController {
   @Patch('payment-methods/:methodId')
   @ApiOperation({ summary: 'Update payment method' })
   @ApiBody({ type: UpdatePaymentMethodDto })
-  @ApiResponse({ status: 200, description: 'Payment method updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment method updated successfully',
+  })
   async updatePaymentMethod(
     @Request() req,
     @Param('methodId') methodId: string,
     @Body() updatePaymentMethodDto: UpdatePaymentMethodDto,
   ) {
-    return await this.userService.updatePaymentMethod(req.user.sub, methodId, updatePaymentMethodDto);
+    return await this.userService.updatePaymentMethod(
+      req.user.sub,
+      methodId,
+      updatePaymentMethodDto,
+    );
   }
 
   @Delete('payment-methods/:methodId')
   @ApiOperation({ summary: 'Delete payment method' })
-  @ApiResponse({ status: 200, description: 'Payment method deleted successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Payment method deleted successfully',
+  })
   async deletePaymentMethod(
     @Request() req,
     @Param('methodId') methodId: string,

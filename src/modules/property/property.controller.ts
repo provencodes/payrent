@@ -20,20 +20,28 @@ import {
   ApiTags,
   ApiOperation,
   ApiResponse,
-  // ApiConsumes,
   ApiBody,
   ApiBearerAuth,
+  ApiBadRequestResponse,
+  ApiUnauthorizedResponse,
+  ApiNotFoundResponse,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { Property } from './entities/property.entity';
-// import { FilesInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-// import { fileFilter, multerOptions } from '../../utils/multer.config';
 import {
   GetAllPropertyDto,
   PropertyResponseDto,
+  PropertyMetricsResponseDto,
+  PropertyRentersResponseDto,
 } from './dto/property-response.dto';
 import { FilterPropertyDto, GetPropertiesDto } from './dto/property.dto';
 import { RenovationRequestDto } from './dto/renovation-request.dto';
+import {
+  BadRequestErrorDto,
+  UnauthorizedErrorDto,
+  NotFoundErrorDto,
+} from '../../shared/dto/error-response.dto';
 
 @ApiBearerAuth()
 @ApiTags('Properties')
@@ -53,7 +61,15 @@ export class PropertyController {
   @ApiResponse({
     status: 201,
     description: 'Property created successfully',
-    type: Property,
+    type: PropertyResponseDto,
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid property data',
+    type: BadRequestErrorDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized',
+    type: UnauthorizedErrorDto,
   })
   async create(
     @Body() createPropertyDto: CreatePropertyDto,
@@ -67,14 +83,27 @@ export class PropertyController {
   @ApiResponse({
     status: 200,
     description: 'List of properties',
-    example: GetAllPropertyDto,
     type: GetAllPropertyDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized',
+    type: UnauthorizedErrorDto,
   })
   async findAll(): Promise<GetAllPropertyDto> {
     return this.propertyService.findAll();
   }
 
   @Get('metrics')
+  @ApiOperation({ summary: 'Get property metrics for current user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Property metrics fetched successfully',
+    type: PropertyMetricsResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized',
+    type: UnauthorizedErrorDto,
+  })
   async getMetrics(@Request() req) {
     return this.propertyService.getMetrics(req.user.sub);
   }

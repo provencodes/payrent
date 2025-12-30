@@ -57,7 +57,7 @@ import { AppleAuthPayloadDto } from './dto/apple-auth.dto';
 @ApiTags('Authentication')
 @Controller('auth')
 export default class RegistrationController {
-  constructor(private authService: AuthenticationService) { }
+  constructor(private authService: AuthenticationService) {}
 
   @Post('register')
   @skipAuth()
@@ -304,7 +304,9 @@ export default class RegistrationController {
 
   @skipAuth()
   @Post('logout')
-  @ApiOperation({ summary: 'Logout from current session (revoke refresh token)' })
+  @ApiOperation({
+    summary: 'Logout from current session (revoke refresh token)',
+  })
   @ApiBody({ type: RefreshTokenDto })
   @ApiResponse({
     status: 200,
@@ -320,7 +322,9 @@ export default class RegistrationController {
   }
 
   @Post('logout-all')
-  @ApiOperation({ summary: 'Logout from all sessions (revoke all refresh tokens)' })
+  @ApiOperation({
+    summary: 'Logout from all sessions (revoke all refresh tokens)',
+  })
   @ApiResponse({
     status: 200,
     description: 'All sessions terminated',

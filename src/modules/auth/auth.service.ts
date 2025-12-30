@@ -52,7 +52,7 @@ export default class AuthenticationService {
     private walletTransactionRepository: Repository<WalletTransaction>,
     @InjectRepository(RefreshToken)
     private refreshTokenRepository: Repository<RefreshToken>,
-  ) { }
+  ) {}
 
   async createNewUser(createUserDto: CreateUserDTO) {
     try {
@@ -625,10 +625,7 @@ export default class AuthenticationService {
       const userEmail = tokenPayload.email;
 
       // Check if email is hidden (relay address)
-      if (
-        !userEmail ||
-        userEmail.endsWith('@privaterelay.appleid.com')
-      ) {
+      if (!userEmail || userEmail.endsWith('@privaterelay.appleid.com')) {
         throw new CustomHttpException(
           'Real email is required. Please disable "Hide My Email" and try again.',
           HttpStatus.BAD_REQUEST,

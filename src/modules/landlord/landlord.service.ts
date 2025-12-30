@@ -95,6 +95,10 @@ export class LandlordService {
       description: `${dto.investmentType} investment - ${dto.shares ? `${dto.shares} shares` : `₦${amount}`}`,
     };
 
-    return await this.paymentProcessor.processPayment(paymentRequest, user, property);
+    return await this.paymentProcessor.processPayment(
+      paymentRequest,
+      user,
+      property,
+    );
   }
 }

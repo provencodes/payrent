@@ -1,6 +1,6 @@
 /**
  * Currency utility functions for consistent Naira/Kobo conversion
- * 
+ *
  * Business Logic:
  * - Users see and input amounts in Naira (₦)
  * - Paystack API expects amounts in Kobo (1 Naira = 100 Kobo)

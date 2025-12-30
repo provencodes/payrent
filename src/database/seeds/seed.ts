@@ -56,7 +56,9 @@ async function seed() {
     ];
 
     for (const userData of users) {
-      const existingUser = await userRepository.findOne({ where: { email: userData.email } });
+      const existingUser = await userRepository.findOne({
+        where: { email: userData.email },
+      });
       if (!existingUser) {
         const user = userRepository.create(userData);
         await userRepository.save(user);
@@ -67,9 +69,11 @@ async function seed() {
     // Seed Wallets
     const walletRepository = dataSource.getRepository(Wallet);
     const allUsers = await userRepository.find();
-    
+
     for (const user of allUsers) {
-      const existingWallet = await walletRepository.findOne({ where: { userId: user.id } });
+      const existingWallet = await walletRepository.findOne({
+        where: { userId: user.id },
+      });
       if (!existingWallet) {
         const wallet = walletRepository.create({
           userId: user.id,

@@ -129,9 +129,13 @@ export class PaymentProcessorService {
     let bankCode = request.bankCode;
 
     if (!accountNumber || !bankCode) {
-      const defaultBankAccount = await this.userService.getDefaultBankAccount(request.userId);
+      const defaultBankAccount = await this.userService.getDefaultBankAccount(
+        request.userId,
+      );
       if (!defaultBankAccount) {
-        throw new BadRequestException('No bank account found. Please add a bank account or provide account details.');
+        throw new BadRequestException(
+          'No bank account found. Please add a bank account or provide account details.',
+        );
       }
       accountNumber = defaultBankAccount.accountNumber;
       bankCode = defaultBankAccount.bankCode;

@@ -108,7 +108,13 @@ export class WalletService {
     const wallet = await this.getOrCreateWallet(userId);
 
     // amountKobo is already in kobo from Paystack, no conversion needed
-    await this.applyCredit(wallet.id, amountKobo, 'funding', reference, metadata);
+    await this.applyCredit(
+      wallet.id,
+      amountKobo,
+      'funding',
+      reference,
+      metadata,
+    );
 
     return {
       credited: true,

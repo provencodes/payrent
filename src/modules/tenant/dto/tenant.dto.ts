@@ -1,5 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNumber, IsString, IsEnum, IsDate, IsOptional } from 'class-validator';
+import {
+  IsNumber,
+  IsString,
+  IsEnum,
+  IsDate,
+  IsOptional,
+} from 'class-validator';
 import { PaymentOption } from '../../landlord/dto/commercial.dto';
 
 export enum PaymentDuration {

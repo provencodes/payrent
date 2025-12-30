@@ -60,6 +60,9 @@ export class LogoutAllResponseDto {
   @ApiProperty({ example: 200 })
   status_code: number;
 
-  @ApiPropertyOptional({ example: 5, description: 'Number of sessions terminated' })
+  @ApiPropertyOptional({
+    example: 5,
+    description: 'Number of sessions terminated',
+  })
   sessions_terminated?: number;
 }

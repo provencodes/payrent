@@ -6,7 +6,10 @@ import { Property } from '../modules/property/entities/property.entity';
 import { Wallet } from '../modules/wallet/entities/wallet.entity';
 import { WalletTransaction } from '../modules/wallet/entities/wallet-transaction.entity';
 import { BankAccount } from '../modules/user/entities/bank-account.entity';
-import { PaymentMethod, PaymentMethodType } from '../modules/user/entities/payment-method.entity';
+import {
+  PaymentMethod,
+  PaymentMethodType,
+} from '../modules/user/entities/payment-method.entity';
 import { Rental } from '../modules/property/entities/rental.entity';
 import { TenantProfile } from '../modules/tenant/entities/tenant.entity';
 import { LoanApplication } from '../modules/tenant/entities/loan-application.entity';
@@ -18,12 +21,93 @@ import { Plan } from '../modules/payment/entities/plan.entity';
 import dataSource from './datasource';
 
 class SeedHelper {
-  private static firstNames = ['James', 'Mary', 'John', 'Patricia', 'Robert', 'Jennifer', 'Michael', 'Linda', 'William', 'Elizabeth', 'David', 'Barbara', 'Richard', 'Susan', 'Joseph', 'Jessica', 'Thomas', 'Sarah', 'Charles', 'Karen'];
-  private static lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin'];
-  private static streets = ['Main St', 'Park Ave', 'Oak St', 'Cedar Ln', 'Pine Dr', 'Maple Ave', 'Washington St', 'Lake View Dr', 'Hillside Ave', 'Sunset Blvd'];
-  private static cities = ['Lagos', 'Abuja', 'Port Harcourt', 'Ibadan', 'Kano', 'Enugu', 'Benin City', 'Jos', 'Ilorin', 'Kaduna'];
-  private static propertyTypes = ['Apartment', 'House', 'Duplex', 'Bungalow', 'Studio', 'Penthouse', 'Villa', 'Condo'];
-  private static banks = ['Access Bank', 'GTBank', 'Zenith Bank', 'UBA', 'First Bank', 'Fidelity Bank', 'Stanbic IBTC'];
+  private static firstNames = [
+    'James',
+    'Mary',
+    'John',
+    'Patricia',
+    'Robert',
+    'Jennifer',
+    'Michael',
+    'Linda',
+    'William',
+    'Elizabeth',
+    'David',
+    'Barbara',
+    'Richard',
+    'Susan',
+    'Joseph',
+    'Jessica',
+    'Thomas',
+    'Sarah',
+    'Charles',
+    'Karen',
+  ];
+  private static lastNames = [
+    'Smith',
+    'Johnson',
+    'Williams',
+    'Brown',
+    'Jones',
+    'Garcia',
+    'Miller',
+    'Davis',
+    'Rodriguez',
+    'Martinez',
+    'Hernandez',
+    'Lopez',
+    'Gonzalez',
+    'Wilson',
+    'Anderson',
+    'Thomas',
+    'Taylor',
+    'Moore',
+    'Jackson',
+    'Martin',
+  ];
+  private static streets = [
+    'Main St',
+    'Park Ave',
+    'Oak St',
+    'Cedar Ln',
+    'Pine Dr',
+    'Maple Ave',
+    'Washington St',
+    'Lake View Dr',
+    'Hillside Ave',
+    'Sunset Blvd',
+  ];
+  private static cities = [
+    'Lagos',
+    'Abuja',
+    'Port Harcourt',
+    'Ibadan',
+    'Kano',
+    'Enugu',
+    'Benin City',
+    'Jos',
+    'Ilorin',
+    'Kaduna',
+  ];
+  private static propertyTypes = [
+    'Apartment',
+    'House',
+    'Duplex',
+    'Bungalow',
+    'Studio',
+    'Penthouse',
+    'Villa',
+    'Condo',
+  ];
+  private static banks = [
+    'Access Bank',
+    'GTBank',
+    'Zenith Bank',
+    'UBA',
+    'First Bank',
+    'Fidelity Bank',
+    'Stanbic IBTC',
+  ];
 
   static randomElement<T>(array: T[]): T {
     return array[Math.floor(Math.random() * array.length)];
@@ -56,7 +140,9 @@ class SeedHelper {
   }
 
   static randomDate(start: Date, end: Date): Date {
-    return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+    return new Date(
+      start.getTime() + Math.random() * (end.getTime() - start.getTime()),
+    );
   }
 }
 
@@ -77,8 +163,8 @@ async function seed() {
       Legal,
       RentSavings,
       Payment,
-      Plan
-    ]
+      Plan,
+    ],
   });
 
   if (!dataSource.isInitialized) {
@@ -112,7 +198,9 @@ async function seed() {
     const password = await bcrypt.hash('password123', 10);
 
     // Create Admin
-    let admin = await userRepo.findOne({ where: { email: 'admin@payrent.com' } });
+    let admin = await userRepo.findOne({
+      where: { email: 'admin@payrent.com' },
+    });
     if (!admin) {
       admin = userRepo.create({
         email: 'admin@payrent.com',
@@ -200,12 +288,16 @@ async function seed() {
 
     console.log('Seeding Properties...');
     const properties: Property[] = [];
-    const landlords = users.filter(u => u.userType === UserType.LANDLORD);
+    const landlords = users.filter((u) => u.userType === UserType.LANDLORD);
 
     for (let i = 0; i < 15; i++) {
       const prop = propertyRepo.create({
         title: `${SeedHelper.randomElement(['Luxury', 'Cozy', 'Modern', 'Spacious'])} ${SeedHelper.randomElement(['Apartment', 'Villa', 'Duplex'])} in ${SeedHelper.randomElement(['Lekki', 'Ikoyi', 'Victoria Island'])}`,
-        type: SeedHelper.randomElement(['3 bedroom apartment', '2 bedroom flat', 'Duplex']),
+        type: SeedHelper.randomElement([
+          '3 bedroom apartment',
+          '2 bedroom flat',
+          'Duplex',
+        ]),
         listingType: SeedHelper.randomElement(['rent', 'sale', 'shortlet']),
         address: SeedHelper.randomAddress(),
         description: 'A beautiful property with modern amenities.',
@@ -225,11 +317,13 @@ async function seed() {
     console.log(`Seeded ${properties.length} properties.`);
 
     console.log('Seeding Rentals & Tenant Profiles...');
-    const tenants = users.filter(u => u.userType === UserType.TENANT);
+    const tenants = users.filter((u) => u.userType === UserType.TENANT);
 
     for (const tenant of tenants) {
       // Tenant Profile
-      let profile = await tenantProfileRepo.findOne({ where: { userId: tenant.id } });
+      let profile = await tenantProfileRepo.findOne({
+        where: { userId: tenant.id },
+      });
       if (!profile) {
         profile = tenantProfileRepo.create({
           user: tenant,
@@ -251,7 +345,9 @@ async function seed() {
           rentAmount: property.rentalPrice,
           paymentReference: `RENT-${Date.now()}-${Math.random().toString(36).substring(7)}`,
           rentStartDate: new Date(),
-          rentEndDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+          rentEndDate: new Date(
+            new Date().setFullYear(new Date().getFullYear() + 1),
+          ),
           status: 'active',
         });
         await rentalRepo.save(rental);
@@ -265,7 +361,9 @@ async function seed() {
           totalSavingsGoal: SeedHelper.randomFloat(1000000, 3000000),
           currentSavings: SeedHelper.randomFloat(100000, 500000),
           duration: 12,
-          maturityDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)),
+          maturityDate: new Date(
+            new Date().setFullYear(new Date().getFullYear() + 1),
+          ),
           interestRate: 10,
           estimatedReturn: 0,
           automation: 'monthly',
@@ -294,16 +392,61 @@ async function seed() {
 
     console.log('Seeding Plans...');
     const plans = [
-      { name: 'Basic', amount: 1000, interval: 'monthly', plan_code: 'PLN_123' },
-      { name: 'Premium', amount: 5000, interval: 'monthly', plan_code: 'PLN_456' },
-      { name: 'Gold', amount: 10000, interval: 'monthly', plan_code: 'PLN_789' },
-      { name: 'Silver', amount: 3000, interval: 'monthly', plan_code: 'PLN_101' },
-      { name: 'Bronze', amount: 500, interval: 'monthly', plan_code: 'PLN_112' },
-      { name: 'Platinum', amount: 20000, interval: 'monthly', plan_code: 'PLN_131' },
-      { name: 'Diamond', amount: 50000, interval: 'monthly', plan_code: 'PLN_415' },
-      { name: 'Starter', amount: 200, interval: 'monthly', plan_code: 'PLN_161' },
+      {
+        name: 'Basic',
+        amount: 1000,
+        interval: 'monthly',
+        plan_code: 'PLN_123',
+      },
+      {
+        name: 'Premium',
+        amount: 5000,
+        interval: 'monthly',
+        plan_code: 'PLN_456',
+      },
+      {
+        name: 'Gold',
+        amount: 10000,
+        interval: 'monthly',
+        plan_code: 'PLN_789',
+      },
+      {
+        name: 'Silver',
+        amount: 3000,
+        interval: 'monthly',
+        plan_code: 'PLN_101',
+      },
+      {
+        name: 'Bronze',
+        amount: 500,
+        interval: 'monthly',
+        plan_code: 'PLN_112',
+      },
+      {
+        name: 'Platinum',
+        amount: 20000,
+        interval: 'monthly',
+        plan_code: 'PLN_131',
+      },
+      {
+        name: 'Diamond',
+        amount: 50000,
+        interval: 'monthly',
+        plan_code: 'PLN_415',
+      },
+      {
+        name: 'Starter',
+        amount: 200,
+        interval: 'monthly',
+        plan_code: 'PLN_161',
+      },
       { name: 'Pro', amount: 7000, interval: 'monthly', plan_code: 'PLN_718' },
-      { name: 'Enterprise', amount: 100000, interval: 'monthly', plan_code: 'PLN_910' },
+      {
+        name: 'Enterprise',
+        amount: 100000,
+        interval: 'monthly',
+        plan_code: 'PLN_910',
+      },
     ];
     for (const p of plans) {
       // Check if plan exists to avoid duplicates if running multiple times (though Plan table might not have unique constraint on name, but let's be safe or just create)

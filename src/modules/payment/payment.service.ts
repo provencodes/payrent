@@ -433,7 +433,11 @@ export class PaymentService {
     );
   }
 
-  async triggerAutoDebit(userId: string, amountNaira: number, metadata: any = {}) {
+  async triggerAutoDebit(
+    userId: string,
+    amountNaira: number,
+    metadata: any = {},
+  ) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) return;
 

@@ -1,3 +1,1 @@
-export class CreateTenantDto {
-  
-}
+export class CreateTenantDto {}

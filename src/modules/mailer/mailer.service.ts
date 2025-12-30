@@ -23,11 +23,11 @@ export class EmailService {
 
   async sendEMail(sendMailDto: SendMailDto) {
     const { to, subject, template, context } = sendMailDto;
-    
+
     try {
       // Compile template with context
       const htmlContent = await this.compileTemplate(template, context);
-      
+
       const { data, error } = await this.resend.emails.send({
         from: 'PayRent <admin@theraptly.com>',
         to: [to],
@@ -40,13 +40,15 @@ export class EmailService {
       }
 
       this.logger.log(`Email sent to ${to} successfully with ID: ${data?.id}`);
-      console.log("mail_data from resend: ", data);
+      console.log('mail_data from resend: ', data);
       return data;
     } catch (e) {
       this.logger.error(
         `Resend API Error - Could not send email to ${to}, Message: ${e.message}, Stack: ${e.stack}`,
       );
-      this.logger.error(`Resend API Key configured: ${!!this.configService.get<string>('MAIL_API_KEY')}`);
+      this.logger.error(
+        `Resend API Key configured: ${!!this.configService.get<string>('MAIL_API_KEY')}`,
+      );
       throw new CustomHttpException(
         FAILED_TO_SEND_EMAIL,
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -54,16 +56,30 @@ export class EmailService {
     }
   }
 
-  private async compileTemplate(templateName: string, context: any): Promise<string> {
+  private async compileTemplate(
+    templateName: string,
+    context: any,
+  ): Promise<string> {
     try {
       // Register layout partial
-      const layoutPath = path.join(process.cwd(), 'src', 'templates', 'partials', 'layout.hbs');
+      const layoutPath = path.join(
+        process.cwd(),
+        'src',
+        'templates',
+        'partials',
+        'layout.hbs',
+      );
       if (fs.existsSync(layoutPath)) {
         const layoutContent = fs.readFileSync(layoutPath, 'utf8');
         handlebars.registerPartial('layout', layoutContent);
       }
 
-      const templatePath = path.join(process.cwd(), 'src', 'templates', `${templateName}.hbs`);
+      const templatePath = path.join(
+        process.cwd(),
+        'src',
+        'templates',
+        `${templateName}.hbs`,
+      );
       const templateContent = fs.readFileSync(templatePath, 'utf8');
       const compiledTemplate = handlebars.compile(templateContent);
       return compiledTemplate(context);

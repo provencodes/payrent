@@ -48,4 +48,4 @@ import { RefreshToken } from './entities/refresh-token.entity';
   ],
   exports: [],
 })
-export class AuthModule { }
+export class AuthModule {}

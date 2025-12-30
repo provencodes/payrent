@@ -18,7 +18,7 @@ async function verify() {
     'tenant_profiles',
     'loan_applications',
     'rent_savings',
-    'plan'
+    'plan',
   ];
 
   console.log('Verifying record counts...');

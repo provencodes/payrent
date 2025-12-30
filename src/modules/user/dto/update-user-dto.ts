@@ -80,8 +80,6 @@ export class UpdateProfileDto {
   @IsString()
   idDocument?: string;
 
-
-
   @ApiProperty({ type: FileObject, required: false })
   @IsOptional()
   @IsObject()
@@ -101,6 +99,4 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsEnum(UserType)
   userType?: UserType;
-
-
 }

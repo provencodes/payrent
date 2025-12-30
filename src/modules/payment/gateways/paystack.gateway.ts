@@ -26,7 +26,7 @@ export class PaystackGateway {
     const defaultRef = `trx_${dto.metadata.userId}_${Date.now()}_${randomUUID()}`;
     // Convert Naira to Kobo using utility
     const amountInKobo = CurrencyUtil.nairaToKobo(dto.amount);
-    
+
     try {
       const response = await axios.post(
         `${this.baseUrl}/transaction/initialize`,
@@ -67,7 +67,7 @@ export class PaystackGateway {
 
     // Convert Naira to Kobo using utility
     const amountInKobo = CurrencyUtil.nairaToKobo(payload.amount);
-    
+
     const response = await axios.post(
       `${this.baseUrl}/plan`,
       {

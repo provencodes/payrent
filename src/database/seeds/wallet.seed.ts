@@ -9,7 +9,9 @@ export const seedWallets = async (dataSource: DataSource) => {
   const users = await userRepository.find();
 
   for (const user of users) {
-    const existingWallet = await walletRepository.findOne({ where: { userId: user.id } });
+    const existingWallet = await walletRepository.findOne({
+      where: { userId: user.id },
+    });
     if (!existingWallet) {
       const wallet = walletRepository.create({
         userId: user.id,
