@@ -28,7 +28,7 @@ export class WalletService {
     private readonly paystack: PaystackGateway,
     private readonly dataSource: DataSource,
     private readonly paymentProcessor: PaymentProcessorService,
-  ) {}
+  ) { }
 
   async getOrCreateWallet(userId: string) {
     let wallet = await this.walletRepository.findOne({
@@ -56,8 +56,7 @@ export class WalletService {
       paymentOption = PaymentOption.CARD,
     } = fundWalletDto;
 
-    const wallet = await this.walletRepository.findOne({ where: { userId } });
-    if (!wallet) throw new NotFoundException('Wallet not found');
+    await this.getOrCreateWallet(userId);
 
     if (paymentOption === PaymentOption.WALLET) {
       throw new BadRequestException('Cannot fund wallet using wallet payment');
@@ -129,8 +128,11 @@ export class WalletService {
     const { userId, amountNaira, reason } = payWithWalletDto;
 
     return await this.dataSource.transaction(async (manager) => {
-      const wallet = await manager.findOne(Wallet, { where: { userId } });
-      if (!wallet) throw new NotFoundException('Wallet not found');
+      let wallet = await manager.findOne(Wallet, { where: { userId } });
+      if (!wallet) {
+        wallet = manager.create(Wallet, { userId, balanceKobo: '0' });
+        wallet = await manager.save(wallet);
+      }
 
       const amountKobo = CurrencyUtil.nairaToKobo(amountNaira);
       if (Number(wallet.balanceKobo) < amountKobo) {
@@ -158,9 +160,7 @@ export class WalletService {
   }
 
   async getWallet(userId: string) {
-    const wallet = await this.walletRepository.findOne({ where: { userId } });
-    if (!wallet) throw new NotFoundException('Wallet not found');
-    return wallet;
+    return await this.getOrCreateWallet(userId);
   }
 
   async verifyWalletFunding(dto: VerifyWalletFundingDto) {
