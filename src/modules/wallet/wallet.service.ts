@@ -78,10 +78,6 @@ export class WalletService {
       { email },
     );
 
-    if (paymentResult.authorization_url) {
-      return paymentResult.authorization_url;
-    }
-
     return paymentResult;
   }
 
