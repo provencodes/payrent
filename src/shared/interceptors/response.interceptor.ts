@@ -37,25 +37,45 @@ export class ResponseInterceptor implements NestInterceptor {
     });
   }
 
-  responseHandler(
-    res: { message: string; data: unknown },
-    context: ExecutionContext,
-  ) {
+  responseHandler(res: any, context: ExecutionContext) {
     const ctx = context.switchToHttp();
     const response = ctx.getResponse();
     const status_code = response.statusCode;
 
     response.setHeader('Content-Type', 'application/json');
-    if (typeof res === 'object') {
-      const { message, ...data } = res;
 
+    // If already in standard format (has success and data fields), return as-is
+    if (res && typeof res === 'object' && 'success' in res && 'data' in res) {
       return {
-        status_code,
-        message,
-        ...data,
+        ...res,
+        status_code: res.status_code || status_code,
       };
-    } else {
-      return res;
     }
+
+    // Extract message if exists, otherwise use default
+    const message =
+      res?.message || 'Operation completed successfully';
+
+    // If res is not an object, wrap it in data
+    if (typeof res !== 'object' || res === null) {
+      return {
+        success: true,
+        message,
+        status_code,
+        data: res,
+      };
+    }
+
+    // Remove message from data to avoid duplication
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { message: _, ...dataWithoutMessage } = res;
+
+    // Return standard format
+    return {
+      success: true,
+      message,
+      status_code,
+      data: Object.keys(dataWithoutMessage).length > 0 ? dataWithoutMessage : null,
+    };
   }
 }

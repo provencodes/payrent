@@ -1,6 +1,6 @@
 import { Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_PIPE } from '@nestjs/core';
+import { APP_PIPE, APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as Joi from 'joi';
 import { LoggerModule } from 'nestjs-pino';
@@ -19,6 +19,8 @@ import { PaymentModule } from './modules/payment/payment.module';
 import { LandlordModule } from './modules/landlord/landlord.module';
 import { LegalModule } from './modules/legal/legal.module';
 import { TenantModule } from './modules/tenant/tenant.module';
+import { ResponseInterceptor } from './shared/interceptors/response.interceptor';
+import { HttpExceptionFilter } from './helpers/http-exception.filter';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -41,6 +43,14 @@ const profile = process.env.PROFILE;
     {
       provide: 'APP_GUARD',
       useClass: AuthGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
     },
   ],
   imports: [
@@ -93,4 +103,4 @@ const profile = process.env.PROFILE;
   ],
   controllers: [HealthController, ProbeController],
 })
-export class AppModule {}
+export class AppModule { }
