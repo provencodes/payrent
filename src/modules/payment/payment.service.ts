@@ -2,6 +2,8 @@ import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import * as crypto from 'crypto';
 // import { InitiatePaymentDto } from './dto/initiate-payment.dto';
@@ -26,6 +28,7 @@ import {
   PaymentMethodType,
 } from '../user/entities/payment-method.entity';
 import { CurrencyUtil } from '../../shared/utils/currency.util';
+import { WalletService } from '../wallet/wallet.service';
 
 @Injectable()
 export class PaymentService {
@@ -44,6 +47,8 @@ export class PaymentService {
     @InjectRepository(Property)
     private readonly propertyRepo: Repository<Property>,
     private readonly dataSource: DataSource,
+    @Inject(forwardRef(() => WalletService))
+    private readonly walletService: WalletService,
   ) {}
 
   async landLordInvest(user, property, amount, dto, channels) {
@@ -299,6 +304,23 @@ export class PaymentService {
           message: 'Payment already verified successfully',
           data: data,
         };
+      }
+
+      // Check if this is a wallet funding transaction
+      if (
+        metadata?.reason === 'Wallet funding' ||
+        (!metadata?.propertyId && metadata?.userId)
+      ) {
+        try {
+          await this.walletService.verifyAndCredit(reference);
+          return {
+            message: 'Wallet funded successfully',
+            data: data,
+          };
+        } catch (error) {
+          console.error('Wallet funding error:', error);
+          throw error;
+        }
       }
 
       // Store payment method if it's a card payment

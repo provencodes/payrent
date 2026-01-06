@@ -28,7 +28,7 @@ export class WalletService {
     private readonly paystack: PaystackGateway,
     private readonly dataSource: DataSource,
     private readonly paymentProcessor: PaymentProcessorService,
-  ) { }
+  ) {}
 
   async getOrCreateWallet(userId: string) {
     let wallet = await this.walletRepository.findOne({
@@ -71,6 +71,10 @@ export class WalletService {
       bankCode: fundWalletDto.bankCode,
       reason: 'Wallet funding',
       description: `Fund wallet with ₦${amountNaira}`,
+      metadata: {
+        userId,
+        reason: 'Wallet funding',
+      },
     };
 
     const paymentResult = await this.paymentProcessor.processPayment(

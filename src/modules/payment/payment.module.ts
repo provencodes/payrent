@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { PaymentController } from './payment.controller';
 import { PaystackGateway } from './gateways/paystack.gateway';
 import { UserModule } from '../user/user.module';
+import { WalletModule } from '../wallet/wallet.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Payment } from './entities/payment.entity';
 import { Installment } from './entities/installment.entity';
@@ -22,9 +23,10 @@ import { Property } from '../property/entities/property.entity';
       Property,
     ]),
     UserModule,
+    forwardRef(() => WalletModule),
   ],
   controllers: [PaymentController],
   providers: [PaymentService, PaystackGateway],
   exports: [PaymentService, PaystackGateway],
 })
-export class PaymentModule {}
+export class PaymentModule { }

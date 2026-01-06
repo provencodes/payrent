@@ -10,11 +10,11 @@ import { SharedModule } from '../../shared/shared.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Wallet, WalletTransaction]),
-    PaymentModule,
+    forwardRef(() => PaymentModule),
     forwardRef(() => SharedModule),
   ],
   controllers: [WalletController],
   providers: [WalletService],
   exports: [WalletService],
 })
-export class WalletModule {}
+export class WalletModule { }

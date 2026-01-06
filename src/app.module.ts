@@ -18,7 +18,6 @@ import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { LandlordModule } from './modules/landlord/landlord.module';
 import { LegalModule } from './modules/legal/legal.module';
-// import { WalletModule } from './modules/wallet/wallet.module';
 import { TenantModule } from './modules/tenant/tenant.module';
 import * as dotenv from 'dotenv';
 
@@ -89,7 +88,6 @@ const profile = process.env.PROFILE;
     PaymentModule,
     LandlordModule,
     LegalModule,
-    // WalletModule,
     TenantModule,
     CustomMailerModule,
   ],

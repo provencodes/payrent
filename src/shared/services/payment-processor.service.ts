@@ -24,6 +24,7 @@ export interface PaymentRequest {
   bankCode?: string;
   reason: string;
   description: string;
+  metadata?: Record<string, any>;
 }
 
 export interface PaymentResponse {
@@ -45,7 +46,7 @@ export class PaymentProcessorService {
     private readonly walletService: WalletService,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
-  ) {}
+  ) { }
 
   async processPayment(
     request: PaymentRequest,
@@ -103,6 +104,7 @@ export class PaymentProcessorService {
       channels,
       metadata: {
         userId: request.userId,
+        ...(request.metadata || {}),
         propertyId: request.propertyId,
         investmentType: request.investmentType,
         paymentType: request.paymentType,
@@ -168,6 +170,7 @@ export class PaymentProcessorService {
       channels,
       metadata: {
         userId: request.userId,
+        ...(request.metadata || {}),
         propertyId: request.propertyId,
         investmentType: request.investmentType,
         paymentType: request.paymentType,
@@ -216,6 +219,7 @@ export class PaymentProcessorService {
       channels,
       metadata: {
         userId: request.userId,
+        ...(request.metadata || {}),
         propertyId: request.propertyId,
         investmentType: request.investmentType,
         paymentType: request.paymentType,
