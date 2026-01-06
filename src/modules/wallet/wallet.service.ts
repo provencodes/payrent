@@ -35,11 +35,21 @@ export class WalletService {
       where: { userId },
     });
     if (wallet) {
-      return wallet;
+      // Explicitly include balance in naira (calls the getter)
+      return {
+        ...wallet,
+        balance: wallet.balance,
+      };
     }
 
     wallet = this.walletRepository.create({ userId, balanceKobo: '0' });
-    return await this.walletRepository.save(wallet);
+    const savedWallet = await this.walletRepository.save(wallet);
+
+    // Explicitly include balance in naira (calls the getter)
+    return {
+      ...savedWallet,
+      balance: savedWallet.balance,
+    };
   }
 
   async fundWallet(
