@@ -22,7 +22,7 @@ export class PropertyService {
     @InjectRepository(Rental)
     private readonly rentalRepository: Repository<Rental>,
     private readonly cloudinaryService: CloudinaryService,
-  ) {}
+  ) { }
 
   async create(dto: CreatePropertyDto, userId: string) {
     if (dto.listingType === ListingType.SHARES && !dto.pricePerShare) {
@@ -236,10 +236,16 @@ export class PropertyService {
       interestRateMax,
       createdAfter,
       createdBefore,
+      isSold,
       ...filters
     } = query;
 
     const qb = this.propertyRepository.createQueryBuilder('property');
+
+    // Handle isSold filter explicitly to ensure boolean comparison
+    if (isSold !== undefined && isSold !== null) {
+      qb.andWhere('property.isSold = :isSold', { isSold: Boolean(isSold) });
+    }
 
     // Standard equality filters
     Object.entries(filters).forEach(([key, value]) => {
