@@ -242,9 +242,11 @@ export class PropertyService {
 
     const qb = this.propertyRepository.createQueryBuilder('property');
 
-    // Handle isSold filter explicitly to ensure boolean comparison
+    // Handle isSold filter explicitly with proper string-to-boolean conversion
     if (isSold !== undefined && isSold !== null) {
-      qb.andWhere('property.isSold = :isSold', { isSold: Boolean(isSold) });
+      // Convert string 'false'/'true' to actual boolean (query params come as strings)
+      const isSoldBool = (isSold as any) === 'false' || isSold === false ? false : true;
+      qb.andWhere('property.isSold = :isSold', { isSold: isSoldBool });
     }
 
     // Standard equality filters
