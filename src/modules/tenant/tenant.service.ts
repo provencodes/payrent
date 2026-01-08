@@ -29,7 +29,7 @@ export class TenantService {
     private readonly propertyRepo: Repository<Property>,
     private readonly paymentProcessor: PaymentProcessorService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   async createRentSavings(dto: SaveRentDto, userId: string, userEmail: string) {
     if (
@@ -42,7 +42,7 @@ export class TenantService {
     if (
       dto.amount * dto.duration !== dto.totalSavingsGoal ||
       (dto.interestRate / 100) * dto.totalSavingsGoal + dto.totalSavingsGoal !==
-      dto.estimatedReturn
+        dto.estimatedReturn
     ) {
       throw new BadRequestException(
         'Error in entries, invalid calculation from values',

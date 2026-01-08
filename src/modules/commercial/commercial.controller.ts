@@ -23,7 +23,7 @@ import {
 @ApiTags('Commercial')
 @Controller('commercial')
 export class CommercialController {
-  constructor(private readonly commercialService: CommercialService) { }
+  constructor(private readonly commercialService: CommercialService) {}
 
   @Post('invest')
   @ApiOperation({

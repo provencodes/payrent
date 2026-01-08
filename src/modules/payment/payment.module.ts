@@ -29,4 +29,4 @@ import { Property } from '../property/entities/property.entity';
   providers: [PaymentService, PaystackGateway],
   exports: [PaymentService, PaystackGateway],
 })
-export class PaymentModule { }
+export class PaymentModule {}

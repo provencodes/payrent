@@ -17,4 +17,4 @@ import { SharedModule } from '../../shared/shared.module';
   providers: [WalletService],
   exports: [WalletService],
 })
-export class WalletModule { }
+export class WalletModule {}

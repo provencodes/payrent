@@ -53,8 +53,7 @@ export class ResponseInterceptor implements NestInterceptor {
     }
 
     // Extract message if exists, otherwise use default
-    const message =
-      res?.message || 'Operation completed successfully';
+    const message = res?.message || 'Operation completed successfully';
 
     // If res is not an object, wrap it in data
     if (typeof res !== 'object' || res === null) {
@@ -75,7 +74,8 @@ export class ResponseInterceptor implements NestInterceptor {
       success: true,
       message,
       status_code,
-      data: Object.keys(dataWithoutMessage).length > 0 ? dataWithoutMessage : null,
+      data:
+        Object.keys(dataWithoutMessage).length > 0 ? dataWithoutMessage : null,
     };
   }
 }

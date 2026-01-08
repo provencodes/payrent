@@ -15,4 +15,4 @@ import { SharedModule } from '../../shared/shared.module';
   controllers: [CommercialController],
   providers: [CommercialService],
 })
-export class CommercialModule { }
+export class CommercialModule {}

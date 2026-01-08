@@ -139,4 +139,4 @@ export class WithdrawDto {
   amountNaira: number;
 }
 
-export class UpdateWalletDto extends PartialType(CreateWalletDto) { }
+export class UpdateWalletDto extends PartialType(CreateWalletDto) {}

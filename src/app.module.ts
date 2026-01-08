@@ -103,4 +103,4 @@ const profile = process.env.PROFILE;
   ],
   controllers: [HealthController, ProbeController],
 })
-export class AppModule { }
+export class AppModule {}

@@ -46,7 +46,7 @@ export class PaymentProcessorService {
     private readonly walletService: WalletService,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
-  ) { }
+  ) {}
 
   async processPayment(
     request: PaymentRequest,
