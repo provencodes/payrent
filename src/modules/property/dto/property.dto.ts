@@ -53,6 +53,15 @@ export class GetPropertiesDto {
   @ApiPropertyOptional() @IsOptional() @IsString() type?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() title?: string;
 
+  @ApiPropertyOptional({
+    example: false,
+    description: 'Filter by sold status (true = sold, false = available)',
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
+  isSold?: boolean;
+
   // New: Partial match
   @ApiPropertyOptional() @IsOptional() @IsString() titleSearch?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() addressSearch?: string;
