@@ -12,7 +12,7 @@ import { PaymentType } from '../property/dto/create-property.dto';
 import { PaymentProcessorService } from '../../shared/services/payment-processor.service';
 
 @Injectable()
-export class LandlordService {
+export class CommercialService {
   constructor(
     @InjectRepository(Property)
     private readonly propertyRepository: Repository<Property>,

@@ -15,7 +15,7 @@ import { PaystackGateway } from '../payment/gateways/paystack.gateway';
 import { WalletTransaction } from './entities/wallet-transaction.entity';
 // import { randomUUID } from 'crypto';
 import { PaymentProcessorService } from '../../shared/services/payment-processor.service';
-import { PaymentOption } from '../landlord/dto/commercial.dto';
+import { PaymentOption } from '../commercial/dto/commercial.dto';
 import { CurrencyUtil } from '../../shared/utils/currency.util';
 
 @Injectable()

@@ -1,5 +1,5 @@
 import { Controller, Post, Body, Request } from '@nestjs/common';
-import { LandlordService } from './landlord.service';
+import { CommercialService } from './commercial.service';
 import { CommercialDto, JointVentureDto } from './dto/commercial.dto';
 import {
   ApiBearerAuth,
@@ -13,17 +13,17 @@ import {
 import {
   InvestmentResponseDto,
   JointVentureResponseDto,
-} from './dto/landlord-response.dto';
+} from './dto/commercial-response.dto';
 import {
   BadRequestErrorDto,
   UnauthorizedErrorDto,
 } from '../../shared/dto/error-response.dto';
 
 @ApiBearerAuth()
-@ApiTags('Landlord')
-@Controller('landlord')
-export class LandlordController {
-  constructor(private readonly landlordService: LandlordService) {}
+@ApiTags('Commercial')
+@Controller('commercial')
+export class CommercialController {
+  constructor(private readonly commercialService: CommercialService) { }
 
   @Post('invest')
   @ApiOperation({
@@ -44,7 +44,7 @@ export class LandlordController {
     type: UnauthorizedErrorDto,
   })
   async initiatePayment(@Body() dto: CommercialDto, @Request() req) {
-    return await this.landlordService.initiatePayment(dto, req.user.sub);
+    return await this.commercialService.initiatePayment(dto, req.user.sub);
   }
 
   @Post('joint-ventures')
@@ -67,6 +67,6 @@ export class LandlordController {
     type: UnauthorizedErrorDto,
   })
   async initiatePaymentJoint(@Body() dto: JointVentureDto, @Request() req) {
-    return await this.landlordService.initiatePayment(dto, req.user.sub);
+    return await this.commercialService.initiatePayment(dto, req.user.sub);
   }
 }

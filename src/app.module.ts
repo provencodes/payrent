@@ -16,7 +16,7 @@ import { MailerModule as CustomMailerModule } from './modules/mailer/mailer.modu
 import { PropertyModule } from './modules/property/property.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { PaymentModule } from './modules/payment/payment.module';
-import { LandlordModule } from './modules/landlord/landlord.module';
+import { CommercialModule } from './modules/commercial/commercial.module';
 import { LegalModule } from './modules/legal/legal.module';
 import { TenantModule } from './modules/tenant/tenant.module';
 import { ResponseInterceptor } from './shared/interceptors/response.interceptor';
@@ -96,7 +96,7 @@ const profile = process.env.PROFILE;
     PropertyModule,
     CloudinaryModule,
     PaymentModule,
-    LandlordModule,
+    CommercialModule,
     LegalModule,
     TenantModule,
     CustomMailerModule,

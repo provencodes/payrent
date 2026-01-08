@@ -141,7 +141,7 @@ node simple-seed.js
 ```
 
 This creates:
-- **Admin User**: `admin@payrent.com` / `password123`
+- **Manager User**: `manager@payrent.com` / `password123`
 - **Landlord User**: `landlord@payrent.com` / `password123` (₦5M wallet)
 - **Tenant User**: `tenant@payrent.com` / `password123` (₦100K wallet)
 

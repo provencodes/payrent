@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { PaymentService } from '../../modules/payment/payment.service';
 import { WalletService } from '../../modules/wallet/wallet.service';
-import { PaymentOption } from '../../modules/landlord/dto/commercial.dto';
+import { PaymentOption } from '../../modules/commercial/dto/commercial.dto';
 import UserService from '../../modules/user/user.service';
 
 export interface PaymentRequest {

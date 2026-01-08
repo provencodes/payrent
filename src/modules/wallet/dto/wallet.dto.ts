@@ -10,7 +10,7 @@ import {
   IsOptional,
   IsEnum,
 } from 'class-validator';
-import { PaymentOption } from '../../landlord/dto/commercial.dto';
+import { PaymentOption } from '../../commercial/dto/commercial.dto';
 
 export class CreateWalletDto {
   @ApiProperty({
@@ -139,4 +139,4 @@ export class WithdrawDto {
   amountNaira: number;
 }
 
-export class UpdateWalletDto extends PartialType(CreateWalletDto) {}
+export class UpdateWalletDto extends PartialType(CreateWalletDto) { }

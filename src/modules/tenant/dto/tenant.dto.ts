@@ -6,7 +6,7 @@ import {
   IsDate,
   IsOptional,
 } from 'class-validator';
-import { PaymentOption } from '../../landlord/dto/commercial.dto';
+import { PaymentOption } from '../../commercial/dto/commercial.dto';
 
 export enum PaymentDuration {
   THREE_MONTH = 3,

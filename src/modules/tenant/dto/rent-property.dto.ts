@@ -8,7 +8,7 @@ import {
   Max,
   IsString,
 } from 'class-validator';
-import { PaymentOption } from '../../landlord/dto/commercial.dto';
+import { PaymentOption } from '../../commercial/dto/commercial.dto';
 
 export enum PaymentMethod {
   CARD = 'card',
