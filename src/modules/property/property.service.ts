@@ -22,7 +22,7 @@ export class PropertyService {
     @InjectRepository(Rental)
     private readonly rentalRepository: Repository<Rental>,
     private readonly cloudinaryService: CloudinaryService,
-  ) {}
+  ) { }
 
   async create(dto: CreatePropertyDto, userId: string) {
     if (dto.listingType === ListingType.SHARES && !dto.pricePerShare) {
