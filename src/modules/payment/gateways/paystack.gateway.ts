@@ -161,7 +161,7 @@ export class PaystackGateway {
 
   async initiateTransfer(payload) {
     const response = await axios.post(
-      `${this.baseUrl}/transferrecipient`,
+      `${this.baseUrl}/transfer`,
       {
         source: 'balance',
         amount: payload.amountKobo,

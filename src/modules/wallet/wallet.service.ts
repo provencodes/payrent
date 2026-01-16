@@ -10,6 +10,7 @@ import {
   FundWalletDto,
   PayWithWalletDto,
   VerifyWalletFundingDto,
+  WithdrawFromWalletDto,
 } from './dto/wallet.dto';
 import { PaystackGateway } from '../payment/gateways/paystack.gateway';
 import { WalletTransaction } from './entities/wallet-transaction.entity';
@@ -17,6 +18,7 @@ import { WalletTransaction } from './entities/wallet-transaction.entity';
 import { PaymentProcessorService } from '../../shared/services/payment-processor.service';
 import { PaymentOption } from '../commercial/dto/commercial.dto';
 import { CurrencyUtil } from '../../shared/utils/currency.util';
+import { User } from '../user/entities/user.entity';
 
 @Injectable()
 export class WalletService {
@@ -28,7 +30,7 @@ export class WalletService {
     private readonly paystack: PaystackGateway,
     private readonly dataSource: DataSource,
     private readonly paymentProcessor: PaymentProcessorService,
-  ) {}
+  ) { }
 
   async getOrCreateWallet(userId: string) {
     let wallet = await this.walletRepository.findOne({
@@ -99,7 +101,7 @@ export class WalletService {
     const verification = await this.paystack.verifyPayment(reference);
     const status = verification?.data?.status; // 'success'
     const amountKobo = Number(verification?.data?.amount || 0); // Paystack returns amount in kobo
-    const metadata = verification?.data || {};
+    const data = verification?.data || {};
 
     if (status !== 'success') {
       throw new BadRequestException('Transaction not successful');
@@ -111,9 +113,17 @@ export class WalletService {
     });
     if (exists) return { credited: false, reason: 'already-processed' };
 
-    // We need a wallet: we can encode userId in reference when initiating.
-    const parts = reference.split('_');
-    const userId = parts[1];
+    // We need a wallet: get userId from metadata or fallback to reference
+    let userId = data.metadata?.userId;
+    if (!userId) {
+      const parts = reference.split('_');
+      userId = parts[1];
+    }
+
+    if (!userId) {
+      throw new BadRequestException('User ID not found in transaction');
+    }
+
     const wallet = await this.getOrCreateWallet(userId);
 
     // amountKobo is already in kobo from Paystack, no conversion needed
@@ -122,7 +132,7 @@ export class WalletService {
       amountKobo,
       'funding',
       reference,
-      metadata,
+      data.metadata,
     );
 
     return {
@@ -179,6 +189,92 @@ export class WalletService {
 
   async verifyWalletFunding(dto: VerifyWalletFundingDto) {
     return await this.verifyAndCredit(dto.reference);
+  }
+
+  async withdrawFromWallet(dto: { userId: string; amountNaira: number }) {
+    const { userId, amountNaira } = dto;
+
+    return await this.dataSource.transaction(async (manager) => {
+      // Get wallet
+      let wallet = await manager.findOne(Wallet, { where: { userId } });
+      if (!wallet) {
+        throw new NotFoundException('Wallet not found');
+      }
+
+      // Check balance
+      const amountKobo = CurrencyUtil.nairaToKobo(amountNaira);
+      if (Number(wallet.balanceKobo) < amountKobo) {
+        throw new BadRequestException('Insufficient wallet balance');
+      }
+
+      // Get user with bank account details
+      const user = await manager.findOne(User, {
+        where: { id: userId },
+        relations: ['bankAccounts'],
+        select: ['id', 'name', 'email'],
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      // Check if user has default bank account
+      const defaultBankAccount = user.bankAccounts?.find((acc) => acc.autoCharge);
+
+      if (!defaultBankAccount) {
+        throw new BadRequestException(
+          'No default bank account found. Please add your bank account details in your profile.',
+        );
+      }
+
+      // Create transfer recipient on Paystack if needed
+      const recipientName = defaultBankAccount.accountName || user.name;
+      const recipientResult = await this.paystack.createTransferRecipient({
+        name: recipientName,
+        accountNumber: defaultBankAccount.accountNumber,
+        bankCode: defaultBankAccount.bankCode,
+        description: 'Wallet withdrawal recipient',
+      });
+
+      if (!recipientResult.status || !recipientResult.data?.recipient_code) {
+        throw new BadRequestException('Failed to create transfer recipient');
+      }
+
+      // Initiate transfer
+      const reference = `withdraw_${userId}_${Date.now()}`;
+      const transferResult = await this.paystack.initiateTransfer({
+        amountKobo,
+        recipientCode: recipientResult.data.recipient_code,
+        reason: 'Wallet withdrawal',
+        reference,
+      });
+
+      if (!transferResult.status) {
+        throw new BadRequestException('Failed to initiate transfer');
+      }
+
+      // Debit wallet
+      wallet.balanceKobo = (Number(wallet.balanceKobo) - amountKobo).toString();
+      await manager.save(wallet);
+
+      // Log transaction
+      const transaction = manager.create(WalletTransaction, {
+        userId,
+        walletId: wallet.id,
+        type: 'debit',
+        amountKobo: amountKobo.toString(),
+        reference,
+        reason: 'withdrawal',
+      });
+      await manager.save(transaction);
+
+      return {
+        message: 'Withdrawal initiated successfully',
+        balanceKobo: wallet.balanceKobo,
+        transferCode: transferResult.data?.transfer_code,
+        reference,
+      };
+    });
   }
 
   private async logTransaction(data: {

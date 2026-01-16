@@ -6,6 +6,7 @@ import {
   IsDate,
   IsOptional,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { PaymentOption } from '../../commercial/dto/commercial.dto';
 
 export enum PaymentDuration {
@@ -34,6 +35,7 @@ export class SaveRentDto {
     example: '06-06-2026',
     description: 'The date the savings will mature',
   })
+  @Type(() => Date)
   @IsDate()
   maturityDate: Date;
 
@@ -76,6 +78,22 @@ export class SaveRentDto {
   @IsOptional()
   @IsEnum(PaymentOption)
   paymentOption?: PaymentOption;
+
+  @ApiPropertyOptional({
+    example: 2000.0,
+    description: 'Amount to allocate for investment (portion of amount)',
+  })
+  @IsOptional()
+  @IsNumber()
+  investmentAmount?: number;
+
+  @ApiPropertyOptional({
+    example: 'rent',
+    description: 'Type of savings: rent or vest',
+  })
+  @IsOptional()
+  @IsString()
+  type?: string;
 
   @ApiPropertyOptional({
     example: '0108696089',

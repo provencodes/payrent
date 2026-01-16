@@ -33,7 +33,7 @@ import {
 @ApiTags('Wallet')
 @Controller('wallet')
 export class WalletController {
-  constructor(private readonly walletService: WalletService) {}
+  constructor(private readonly walletService: WalletService) { }
 
   @Post('create')
   @ApiOperation({ summary: 'Create a wallet for a user' })
@@ -140,5 +140,28 @@ export class WalletController {
   })
   verifyFunding(@Body() dto: VerifyWalletFundingDto) {
     return this.walletService.verifyWalletFunding(dto);
+  }
+
+  @Post('withdraw')
+  @ApiOperation({ summary: 'Withdraw funds from wallet to bank account' })
+  @ApiBody({ type: 'WithdrawFromWalletDto' as any })
+  @ApiResponse({
+    status: 200,
+    description: 'Withdrawal initiated successfully',
+  })
+  @ApiBadRequestResponse({
+    description: 'Insufficient balance or missing bank account',
+    type: BadRequestErrorDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized - Invalid or missing token',
+    type: UnauthorizedErrorDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Wallet not found',
+    type: NotFoundErrorDto,
+  })
+  withdrawFromWallet(@Body() dto: { userId: string; amountNaira: number }) {
+    return this.walletService.withdrawFromWallet(dto);
   }
 }

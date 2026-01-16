@@ -10,6 +10,8 @@ import {
 } from '@nestjs/common';
 import { User } from './entities/user.entity';
 import UserService from './user.service';
+import { VerifyMeService } from './verifyme.service';
+import { VerifyIdentityDto } from './dto/verify-identity.dto';
 import {
   ApiTags,
   ApiResponse,
@@ -32,7 +34,10 @@ import {
 @ApiTags('User')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly verifyMeService: VerifyMeService,
+  ) { }
 
   @Get('referrals')
   @ApiOperation({ summary: 'Get a user referrer metrics' })
@@ -199,5 +204,33 @@ export class UsersController {
     @Param('methodId') methodId: string,
   ) {
     return await this.userService.deletePaymentMethod(req.user.sub, methodId);
+  }
+
+  @Post('verify-nin')
+  @ApiOperation({ summary: 'Verify NIN using VerifyMe' })
+  @ApiBody({ type: VerifyIdentityDto })
+  @ApiResponse({ status: 200, description: 'NIN verified successfully' })
+  async verifyNin(@Body() verifyDto: VerifyIdentityDto) {
+    const { number, firstName, lastName, dob } = verifyDto;
+    return await this.verifyMeService.verifyNin(
+      number,
+      firstName,
+      lastName,
+      dob,
+    );
+  }
+
+  @Post('verify-bvn')
+  @ApiOperation({ summary: 'Verify BVN using VerifyMe' })
+  @ApiBody({ type: VerifyIdentityDto })
+  @ApiResponse({ status: 200, description: 'BVN verified successfully' })
+  async verifyBvn(@Body() verifyDto: VerifyIdentityDto) {
+    const { number, firstName, lastName, dob } = verifyDto;
+    return await this.verifyMeService.verifyBvn(
+      number,
+      firstName,
+      lastName,
+      dob,
+    );
   }
 }

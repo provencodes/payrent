@@ -5,7 +5,7 @@ import {
   IsEnum,
   IsDateString,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 // import { PaymentType } from './create-property.dto';
 import { ListingType } from './create-property.dto';
@@ -52,6 +52,20 @@ export class GetPropertiesDto {
   listingType?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() type?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() title?: string;
+
+  @ApiPropertyOptional({
+    type: Boolean,
+    description: 'Filter by sold status - false returns only unsold properties',
+    example: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  isSold?: boolean;
 
   // New: Partial match
   @ApiPropertyOptional() @IsOptional() @IsString() titleSearch?: string;

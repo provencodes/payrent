@@ -3,6 +3,7 @@ import UserService from './user.service';
 import { UsersController } from './user.controller';
 import { FinancialController } from './financial.controller';
 import { UserFinancialService } from './user-financial.service';
+import { VerifyMeService } from './verifyme.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { BankAccount } from './entities/bank-account.entity';
@@ -16,7 +17,7 @@ import { LoanApplication } from '../tenant/entities/loan-application.entity';
 
 @Module({
   controllers: [UsersController, FinancialController],
-  providers: [UserService, UserFinancialService],
+  providers: [UserService, UserFinancialService, VerifyMeService],
   imports: [
     TypeOrmModule.forFeature([
       User,
@@ -32,4 +33,4 @@ import { LoanApplication } from '../tenant/entities/loan-application.entity';
   ],
   exports: [UserService, UserFinancialService],
 })
-export class UserModule {}
+export class UserModule { }

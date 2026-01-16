@@ -10,7 +10,7 @@ export class LegalService {
   constructor(
     @InjectRepository(Legal)
     private readonly legalRepo: Repository<Legal>,
-  ) {}
+  ) { }
 
   async create(createLegalDto: CreateLegalDto) {
     const legal = this.legalRepo.create(createLegalDto);
@@ -22,10 +22,17 @@ export class LegalService {
   }
 
   async findAll() {
-    const data = await this.legalRepo.find();
+    const data = await this.legalRepo.find({
+      order: { createdAt: 'DESC' },
+    });
     return {
+      success: true,
       message: 'All legal entries fetched successfully',
-      data: data,
+      status_code: 200,
+      data: {
+        items: data,
+        total: data.length,
+      },
     };
   }
 
@@ -35,7 +42,9 @@ export class LegalService {
       throw new NotFoundException(`legal entry with id: ${id} not found`);
     }
     return {
+      success: true,
       message: 'Legal entry fetched successfully',
+      status_code: 200,
       data: legal,
     };
   }
@@ -57,8 +66,44 @@ export class LegalService {
     });
 
     return {
+      success: true,
       message: 'Legal entry updated successfully',
+      status_code: 200,
       data: updatedLegal,
+    };
+  }
+
+  async markAsPaid(
+    id: string,
+    paymentData: {
+      legalPackageId: string;
+      amountPaid: number;
+      paymentMethod: string;
+      transactionRef: string;
+    },
+  ) {
+    const legal = await this.legalRepo.findOne({ where: { id } });
+
+    if (!legal) {
+      throw new NotFoundException(`Legal entry with ID ${id} not found`);
+    }
+
+    legal.legalPackageId = paymentData.legalPackageId;
+    legal.amountPaid = paymentData.amountPaid;
+    legal.isPaid = true;
+    legal.paymentDetails = {
+      method: paymentData.paymentMethod,
+      transactionRef: paymentData.transactionRef,
+      paidAt: new Date(),
+    };
+
+    await this.legalRepo.save(legal);
+
+    return {
+      success: true,
+      message: 'Payment recorded successfully',
+      status_code: 200,
+      data: legal,
     };
   }
 
@@ -68,6 +113,10 @@ export class LegalService {
       throw new NotFoundException(`Legal entry with ID ${id} not found`);
     }
     await this.legalRepo.remove(legal.data);
-    return { message: `Legal entry with ID #${id} successfully deleted.` };
+    return {
+      success: true,
+      message: `Legal entry with ID #${id} successfully deleted.`,
+      status_code: 200,
+    };
   }
 }

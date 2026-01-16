@@ -45,6 +45,12 @@ export class RentSavings {
   @Column()
   automation: string; // e.g., "Month end"
 
+  @Column('decimal', { precision: 12, scale: 2, default: 0 })
+  investmentAmount: number;
+
+  @Column({ default: 'rent' })
+  type: string; // rent, vest
+
   @Column({ default: 'active' })
   status: string; // active, completed, cancelled
 

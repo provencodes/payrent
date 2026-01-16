@@ -29,7 +29,7 @@ export class TenantService {
     private readonly propertyRepo: Repository<Property>,
     private readonly paymentProcessor: PaymentProcessorService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   async createRentSavings(dto: SaveRentDto, userId: string, userEmail: string) {
     if (
@@ -42,7 +42,7 @@ export class TenantService {
     if (
       dto.amount * dto.duration !== dto.totalSavingsGoal ||
       (dto.interestRate / 100) * dto.totalSavingsGoal + dto.totalSavingsGoal !==
-        dto.estimatedReturn
+      dto.estimatedReturn
     ) {
       throw new BadRequestException(
         'Error in entries, invalid calculation from values',
@@ -65,6 +65,12 @@ export class TenantService {
       { email: userEmail },
     );
 
+    if (!paymentResult.success) {
+      throw new BadRequestException(
+        paymentResult.message || 'Payment processing failed during rent savings plan creation',
+      );
+    }
+
     const rentSavings = this.rentSavingsRepo.create({
       userId,
       monthlyAmount: dto.amount,
@@ -74,6 +80,8 @@ export class TenantService {
       interestRate: dto.interestRate,
       estimatedReturn: dto.estimatedReturn,
       automation: dto.automation,
+      investmentAmount: dto.investmentAmount || 0,
+      type: dto.type || 'rent',
       currentSavings: paymentResult.success ? dto.amount : 0,
     });
 

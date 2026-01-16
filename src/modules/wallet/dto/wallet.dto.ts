@@ -121,22 +121,23 @@ export class VerifyWalletFundingDto {
   reference: string;
 }
 
-export class WithdrawDto {
+export class WithdrawFromWalletDto {
+  @ApiProperty({
+    example: 'd3f7a939-4fc0-4a1e-9a0b-92b748c63e2a',
+    description: 'User ID withdrawing funds',
+  })
   @IsString()
   @IsNotEmpty()
   userId: string;
 
-  @IsString()
-  @IsNotEmpty()
-  bankCode: string;
-
-  @IsString()
-  @IsNotEmpty()
-  accountNumber: string;
-
+  @ApiProperty({
+    example: 5000,
+    description: 'Amount to withdraw in Naira (minimum ₦1000)',
+  })
   @IsInt()
   @IsPositive()
+  @Min(1000)
   amountNaira: number;
 }
 
-export class UpdateWalletDto extends PartialType(CreateWalletDto) {}
+export class UpdateWalletDto extends PartialType(CreateWalletDto) { }

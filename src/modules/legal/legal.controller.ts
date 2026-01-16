@@ -15,7 +15,7 @@ import { ApiBearerAuth } from '@nestjs/swagger';
 @ApiBearerAuth()
 @Controller('legal')
 export class LegalController {
-  constructor(private readonly legalService: LegalService) {}
+  constructor(private readonly legalService: LegalService) { }
 
   @Post()
   create(@Body() createLegalDto: CreateLegalDto) {
@@ -35,6 +35,11 @@ export class LegalController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateLegalDto: UpdateLegalDto) {
     return this.legalService.update(id, updateLegalDto);
+  }
+
+  @Post(':id/pay')
+  payForService(@Param('id') id: string, @Body() paymentDto: any) {
+    return this.legalService.markAsPaid(id, paymentDto);
   }
 
   @Delete(':id')

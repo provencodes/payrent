@@ -17,6 +17,9 @@ export class Legal {
   id: string;
 
   @Column()
+  userId: string;
+
+  @Column()
   propertyId: string;
 
   @Column()
@@ -37,8 +40,21 @@ export class Legal {
   @Column()
   caseStatus: string;
 
-  @Column()
+  @Column({ nullable: true })
   legalPackageType?: string;
+
+  @Column({ nullable: true })
+  legalPackageId?: string;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  amountPaid?: number;
+
+  @Column({ type: 'jsonb', nullable: true })
+  paymentDetails?: {
+    method: string;
+    transactionRef: string;
+    paidAt: Date;
+  };
 
   @Column({ nullable: false, default: false })
   approved: boolean;

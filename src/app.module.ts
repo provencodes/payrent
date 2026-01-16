@@ -18,6 +18,7 @@ import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { PaymentModule } from './modules/payment/payment.module';
 import { CommercialModule } from './modules/commercial/commercial.module';
 import { LegalModule } from './modules/legal/legal.module';
+import { LegalPackageModule } from './modules/legal-package/legal-package.module';
 import { TenantModule } from './modules/tenant/tenant.module';
 import { ResponseInterceptor } from './shared/interceptors/response.interceptor';
 import { HttpExceptionFilter } from './helpers/http-exception.filter';
@@ -98,9 +99,10 @@ const profile = process.env.PROFILE;
     PaymentModule,
     CommercialModule,
     LegalModule,
+    LegalPackageModule,
     TenantModule,
     CustomMailerModule,
   ],
   controllers: [HealthController, ProbeController],
 })
-export class AppModule {}
+export class AppModule { }

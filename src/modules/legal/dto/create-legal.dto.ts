@@ -15,9 +15,20 @@ class FileObject {
   @IsString()
   url: string;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  public_id: string;
+  public_id?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @ApiPropertyOptional({ example: 'image/jpeg' })
+  @IsOptional()
+  @IsString()
+  type?: string;
 }
 
 export enum CaseStatus {
@@ -28,6 +39,13 @@ export enum CaseStatus {
 }
 
 export class CreateLegalDto {
+  @ApiProperty({
+    example: 'b7c2e1a3-4f56-4d89-9c3b-1a2b3c4d5e6f',
+    description: 'UUID of the user creating the request',
+  })
+  @IsUUID('4', { message: 'userId must be a valid UUID' })
+  userId: string;
+
   @ApiProperty({
     example: 'a9a1b3d2-9124-4d53-87d4-d6a1bc5a2b7d',
     description: 'UUID of the property to involved',
