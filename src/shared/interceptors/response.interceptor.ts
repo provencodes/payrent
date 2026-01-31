@@ -40,7 +40,7 @@ export class ResponseInterceptor implements NestInterceptor {
   responseHandler(res: any, context: ExecutionContext) {
     const ctx = context.switchToHttp();
     const response = ctx.getResponse();
-    const status_code = response.statusCode;
+    const status_code = res.status_code || response.statusCode;
 
     response.setHeader('Content-Type', 'application/json');
 
@@ -67,7 +67,16 @@ export class ResponseInterceptor implements NestInterceptor {
 
     // Remove message from data to avoid duplication
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { message: _, ...dataWithoutMessage } = res;
+    const { message: _, status_code: __, ...dataWithoutMessage } = res;
+
+    if (status_code !== HttpStatus.OK && status_code !== HttpStatus.CREATED) {
+      return {
+        success: false,
+        message,
+        status_code,
+        data: dataWithoutMessage,
+      };
+    }
 
     // Return standard format
     return {

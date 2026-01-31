@@ -12,7 +12,7 @@ export class CustomHttpException extends HttpException {
     if (response !== null) {
       const res = response as Record<string, unknown>;
       return {
-        message: 'An error occured',
+        message: 'An error occurred',
         error: res,
         status_code: status,
       };

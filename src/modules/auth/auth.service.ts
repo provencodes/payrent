@@ -63,10 +63,10 @@ export default class AuthenticationService {
         });
 
         if (usernameExists) {
-          return {
-            status_code: HttpStatus.BAD_REQUEST,
-            message: SYS_MSG.USER_ACCOUNT_EXIST,
-          };
+          throw new CustomHttpException(
+            SYS_MSG.USER_ACCOUNT_EXIST,
+            HttpStatus.BAD_REQUEST,
+          );
         }
       } else {
         createUserDto.name = await this.generateUniqueUsername();
@@ -78,10 +78,10 @@ export default class AuthenticationService {
       });
 
       if (emailExists) {
-        return {
-          status_code: HttpStatus.BAD_REQUEST,
-          message: SYS_MSG.USER_ACCOUNT_EXIST,
-        };
+        throw new CustomHttpException(
+          SYS_MSG.USER_ACCOUNT_EXIST,
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       // const payload = {
@@ -125,7 +125,7 @@ export default class AuthenticationService {
       const otp = await this.generateOtp();
       const hashedOtp = await this.hashOtp(otp);
       const otpCooldownExpires = new Date(
-        currentTime.getTime() + 1 * 60 * 1000,
+        currentTime.getTime() + 5 * 60 * 1000,
       );
       // await this.userService.saveOtp(
       //   findUser.id,
@@ -210,11 +210,14 @@ export default class AuthenticationService {
         status_code: HttpStatus.CREATED,
       };
     } catch (error) {
+      if (error instanceof CustomHttpException) {
+        throw error;
+      }
       console.error(error);
-      return {
-        status_code: HttpStatus.NOT_IMPLEMENTED,
-        message: 'Unable to create user.',
-      };
+      throw new CustomHttpException(
+        'Unable to create user.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -252,7 +255,7 @@ export default class AuthenticationService {
 
     const updatePayload = {
       emailVerificationToken: newToken,
-      emailVerificationTokenExpires: addMinutes(new Date(), 15),
+      emailVerificationTokenExpires: addMinutes(new Date(), 5),
     };
     const identifierOptions: UserIdentifierOptionsType = {
       identifierType: 'email',
@@ -456,26 +459,26 @@ export default class AuthenticationService {
       });
 
       if (!user) {
-        return {
-          status_code: HttpStatus.UNAUTHORIZED,
-          message: INVALID_CREDENTIALS,
-        };
+        throw new CustomHttpException(
+          INVALID_CREDENTIALS,
+          HttpStatus.UNAUTHORIZED,
+        );
       }
 
       const isMatch = await bcrypt.compare(password, user.password);
 
       if (!isMatch) {
-        return {
-          status_code: HttpStatus.UNAUTHORIZED,
-          message: INVALID_CREDENTIALS,
-        };
+        throw new CustomHttpException(
+          INVALID_CREDENTIALS,
+          HttpStatus.UNAUTHORIZED,
+        );
       }
 
       if (user && !user.isEmailVerified) {
-        return {
-          status_code: 400,
-          message: 'Complete your verification first',
-        };
+        throw new CustomHttpException(
+          'Complete your verification first',
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       const access_token = this.signJWT(user);
@@ -497,11 +500,14 @@ export default class AuthenticationService {
 
       return { message: LOGIN_SUCCESSFUL, ...responsePayload };
     } catch (error) {
+      if (error instanceof CustomHttpException) {
+        throw error;
+      }
       console.error(error);
-      return {
-        status_code: HttpStatus.UNAUTHORIZED,
-        message: SYS_MSG.LOGIN_ERROR,
-      };
+      throw new CustomHttpException(
+        SYS_MSG.LOGIN_ERROR,
+        HttpStatus.UNAUTHORIZED,
+      );
     }
   }
 
@@ -795,10 +801,10 @@ export default class AuthenticationService {
       identifierType: 'email',
     });
     if (!findUser || !(findUser instanceof User)) {
-      return {
-        message: SYS_MSG.USER_NOT_FOUND,
-        status_code: HttpStatus.BAD_REQUEST,
-      };
+      throw new CustomHttpException(
+        SYS_MSG.USER_NOT_FOUND,
+        HttpStatus.BAD_REQUEST,
+      );
     }
     const currentTime = new Date();
     if (
@@ -812,7 +818,7 @@ export default class AuthenticationService {
     }
     const otp = await this.generateOtp();
     const hashedOtp = await this.hashOtp(otp);
-    const otpCooldownExpires = new Date(currentTime.getTime() + 1 * 60 * 1000);
+    const otpCooldownExpires = new Date(currentTime.getTime() + 5 * 60 * 1000);
     await this.userService.saveOtp(findUser.id, hashedOtp, otpCooldownExpires);
     const sendMailDto: SendMailDto = {
       to: email,
@@ -841,6 +847,10 @@ export default class AuthenticationService {
     const validOtp = await this.compareOtp(otp, findUser.otp);
     if (!validOtp) {
       throw new CustomHttpException('invalid otp', HttpStatus.BAD_REQUEST);
+    }
+    const currentTime = new Date();
+    if (currentTime > findUser.otpCooldownExpires) {
+      throw new CustomHttpException('OTP has expired', HttpStatus.BAD_REQUEST);
     }
     await this.userService.updateOtpStatus(findUser.id);
     return {

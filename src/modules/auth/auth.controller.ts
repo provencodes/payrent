@@ -28,21 +28,12 @@ import {
   CreateUserSuccessResponse,
 } from '../user/dto/user-response.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
-import GoogleAuthPayload from './interfaces/GoogleAuthPayloadInterface';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { GoogleAuthPayloadDto } from './dto/google-auth.dto';
 import { FacebookAuthPayloadDto } from './dto/facebook-auth.dto';
 import FacebookAuthPayload from './interfaces/FacebookAuthPayloadInterface';
-import {
-  EmailVerificationDto,
-  ResendEmailVerificationDto,
-  VerifyOtpDto,
-} from './dto/verify-email.dto';
-import {
-  ApiVerificationEmailResponsesDoc,
-  ApiResendVerificationEmailResponsesDoc,
-  changePasswordWithOtp,
-} from './docs/email-verification.docs';
+import { VerifyOtpDto } from './dto/verify-email.dto';
+import { changePasswordWithOtp } from './docs/email-verification.docs';
 import { ResetPasswordDto } from './dto/reset-password-dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import {
@@ -196,26 +187,6 @@ export default class RegistrationController {
     const { newPassword, otp, email } = newPassworddto;
     return await this.authService.resetPassword(email, otp, newPassword);
   }
-
-  // @skipAuth()
-  // @ApiOperation({ summary: 'OTP verification' })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'OTP verified',
-  //   type: AuthResponseDto,
-  // })
-  // @ApiBadRequestResponse({ description: 'invalid OTP' })
-  // @Post('reset-password/:email')
-  // async ressetPasswordWithOtp(
-  //   @Param('email') email: string,
-  //   @Body() data: { otp: string },
-  // ) {
-  //   return await this.authService.verifyOtp(
-  //     email.toString(),
-  //     data.otp.toString(),
-  //   );
-  // }
-
   @skipAuth()
   @ApiOperation({ summary: 'OTP verification' })
   @ApiBody({ type: VerifyOtpDto })
@@ -244,26 +215,6 @@ export default class RegistrationController {
   async resendOtp(@Param('email') email: string) {
     return await this.authService.resendOtp(email.toString());
   }
-
-  // @skipAuth()
-  // @ApiVerificationEmailResponsesDoc()
-  // @Get('verify-email/:token')
-  // async verifyEmail(@Param() verifyEmailDto: EmailVerificationDto) {
-  //   const { token } = verifyEmailDto;
-  //   return await this.authService.verifyEmail(token);
-  // }
-
-  // @skipAuth()
-  // @ApiResendVerificationEmailResponsesDoc()
-  // @Post('resend-verification-email')
-  // async resendVerificationEmail(
-  //   @Body() resendEmailVerificationDto: ResendEmailVerificationDto,
-  // ) {
-  //   const { email } = resendEmailVerificationDto;
-  //   return await this.authService.resendVerificationEmail(email);
-  // }
-
-  // ==================== REFRESH TOKEN ENDPOINTS ====================
 
   @skipAuth()
   @Post('refresh')

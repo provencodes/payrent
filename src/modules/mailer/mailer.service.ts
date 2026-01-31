@@ -1,6 +1,7 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Resend } from 'resend';
+import * as nodemailer from 'nodemailer';
 import { SendMailDto } from './dto/send-mail.dto';
 import { CustomHttpException } from '../../helpers/custom-http-filter';
 import { FAILED_TO_SEND_EMAIL } from '../../helpers/systemMessages';
@@ -12,42 +13,65 @@ import * as handlebars from 'handlebars';
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private readonly resend: Resend;
+  private readonly transporter: nodemailer.Transporter;
+  private readonly mailService: string;
 
   constructor(private readonly configService: ConfigService) {
-    const apiKey = this.configService.get<string>('MAIL_API_KEY');
-    if (!apiKey) {
-      throw new Error('MAIL_API_KEY is required for Resend');
+    this.mailService = this.configService.get<string>('MAIL_SERVICE', 'resend');
+
+    if (this.mailService === 'resend') {
+      const apiKey = this.configService.get<string>('MAIL_API_KEY');
+      if (!apiKey) {
+        throw new Error('MAIL_API_KEY is required for Resend');
+      }
+      this.resend = new Resend(apiKey);
+    } else {
+      this.transporter = nodemailer.createTransport({
+        host: this.configService.get<string>('SMTP_HOST'),
+        port: this.configService.get<number>('SMTP_PORT'),
+        secure: this.configService.get<string>('GMAIL_SECURE') === 'true',
+        auth: {
+          user: this.configService.get<string>('SMTP_USER'),
+          pass: this.configService.get<string>('SMTP_PASSWORD'),
+        },
+      });
     }
-    this.resend = new Resend(apiKey);
   }
 
   async sendEMail(sendMailDto: SendMailDto) {
     const { to, subject, template, context } = sendMailDto;
 
     try {
-      // Compile template with context
       const htmlContent = await this.compileTemplate(template, context);
 
-      const { data, error } = await this.resend.emails.send({
-        from: 'PayRent <admin@theraptly.com>',
-        to: [to],
-        subject,
-        html: htmlContent,
-      });
+      if (this.mailService === 'resend') {
+        const { data, error } = await this.resend.emails.send({
+          from: 'PayRent <admin@theraptly.com>',
+          to: [to],
+          subject,
+          html: htmlContent,
+        });
 
-      if (error) {
-        throw new Error(error.message);
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        this.logger.log(`Email sent to ${to} successfully via Resend with ID: ${data?.id}`);
+        return data;
+      } else {
+        const info = await this.transporter.sendMail({
+          from: `"PayRent" <${this.configService.get<string>('SMTP_USER')}>`,
+          to,
+          subject,
+          html: htmlContent,
+        });
+
+        this.logger.log(`Email sent to ${to} successfully via SMTP with ID: ${info.messageId}`);
+        return info;
       }
-
-      this.logger.log(`Email sent to ${to} successfully with ID: ${data?.id}`);
-      console.log('mail_data from resend: ', data);
-      return data;
     } catch (e) {
       this.logger.error(
-        `Resend API Error - Could not send email to ${to}, Message: ${e.message}, Stack: ${e.stack}`,
-      );
-      this.logger.error(
-        `Resend API Key configured: ${!!this.configService.get<string>('MAIL_API_KEY')}`,
+        `Mail Service (${this.mailService}) Error - Could not send email to ${to}, Message: ${e.message}, Stack: ${e.stack}`,
       );
       throw new CustomHttpException(
         FAILED_TO_SEND_EMAIL,

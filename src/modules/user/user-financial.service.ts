@@ -23,7 +23,7 @@ export class UserFinancialService {
     private readonly rentSavingsRepo: Repository<RentSavings>,
     @InjectRepository(LoanApplication)
     private readonly loanApplicationRepo: Repository<LoanApplication>,
-  ) {}
+  ) { }
 
   async getTransactionHistory(userId: string, page = 1, limit = 20) {
     try {
@@ -244,7 +244,7 @@ export class UserFinancialService {
           .getRawOne(),
       ]);
 
-      const currentBalance = wallet ? wallet.balance : 0;
+      const currentBalance = Number(wallet?.balance || 0);
       const totalInvestments = Number(totalPayments?.total || 0);
       const totalRent = Number(totalRentPaid?.total || 0);
       const totalSaved = Number(totalSavings?.total || 0);
@@ -284,7 +284,71 @@ export class UserFinancialService {
         },
       };
     } catch (error) {
+      console.error(
+        `[UserFinancialService] getUserFinancialOverview Error for user ${userId}:`,
+        error,
+      );
       throw new Error(`Failed to fetch financial overview: ${error.message}`);
+    }
+  }
+
+  async getUserPortfolio(userId: string) {
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+
+    try {
+      const overview = await this.getUserFinancialOverview(userId);
+      const { data } = overview;
+
+      // Mock chart data structure for now
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+      const growthData = [100000, 120000, 115000, 140000, 160000, 180000];
+
+      return {
+        message: 'Portfolio data fetched successfully',
+        data: {
+          metrics: {
+            totalValue:
+              data.wallet.currentBalance + data.investments.totalInvestments,
+            totalInvested: data.investments.totalInvestments,
+            totalReturns: data.investments.totalInvestments * 0.15, // Mock ROI
+            roi: 15.0,
+            monthlyGrowth: 4.2,
+          },
+          wallet: data.wallet,
+          charts: {
+            portfolioGrowth: {
+              labels: months,
+              datasets: [{ label: 'Portfolio Value', data: growthData }],
+            },
+            assetAllocation: {
+              labels: ['Properties', 'Investments', 'Savings', 'Cash'],
+              datasets: [
+                {
+                  data: [45, 25, 20, 10],
+                  backgroundColor: ['#FF9400', '#10B981', '#3B82F6', '#6B7280'],
+                },
+              ],
+            },
+            monthlyPerformance: {
+              labels: months,
+              datasets: [
+                {
+                  label: 'Monthly Returns',
+                  data: [5000, 8000, -2000, 12000, 15000, 18000],
+                },
+              ],
+            },
+          },
+        },
+      };
+    } catch (error) {
+      console.error(
+        `[UserFinancialService] getUserPortfolio Error for user ${userId}:`,
+        error,
+      );
+      throw new Error(`Failed to fetch portfolio data: ${error.message}`);
     }
   }
 }

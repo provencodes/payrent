@@ -20,7 +20,7 @@ import { UnauthorizedErrorDto } from '../../shared/dto/error-response.dto';
 @ApiTags('Financial')
 @Controller('financial')
 export class FinancialController {
-  constructor(private readonly userFinancialService: UserFinancialService) {}
+  constructor(private readonly userFinancialService: UserFinancialService) { }
 
   @Get('transactions')
   @ApiOperation({ summary: 'Get user transaction history with pagination' })
@@ -124,5 +124,19 @@ export class FinancialController {
     return await this.userFinancialService.getUserFinancialOverview(
       req.user.sub,
     );
+  }
+
+  @Get('portfolio')
+  @ApiOperation({ summary: 'Get detailed user portfolio and asset allocation' })
+  @ApiResponse({
+    status: 200,
+    description: 'Portfolio data fetched successfully',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized',
+    type: UnauthorizedErrorDto,
+  })
+  async getPortfolio(@Request() req) {
+    return await this.userFinancialService.getUserPortfolio(req.user.sub);
   }
 }
