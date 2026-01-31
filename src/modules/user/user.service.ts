@@ -241,6 +241,7 @@ export default class UserService {
     const user = await this.getUserById(userId);
     const totalReferral = await this.getTotalReferrals(userId);
     const todayReferrer = await this.getTodayReferrals(userId);
+    const referralList = await this.getReferralsList(userId);
 
     return {
       success: true,
@@ -249,6 +250,7 @@ export default class UserService {
         referrerCode: user?.referralCode || '',
         totalReferrer: totalReferral,
         todayReferrer: todayReferrer,
+        referralList: referralList.data.referrals,
       },
     };
   }

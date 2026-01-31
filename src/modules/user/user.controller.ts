@@ -37,7 +37,7 @@ export class UsersController {
   constructor(
     private readonly userService: UserService,
     private readonly verifyMeService: VerifyMeService,
-  ) { }
+  ) {}
 
   @Get('referrals')
   @ApiOperation({ summary: 'Get a user referrer metrics' })
@@ -49,18 +49,18 @@ export class UsersController {
     return await this.userService.getReferrals(req.user.sub);
   }
 
-  @Get('referrals/list')
-  @ApiOperation({
-    summary: 'Get detailed list of users referred by current user',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Referrals list fetched successfully',
-    type: ReferralsListResponseDto,
-  })
-  async getReferralsList(@Request() req) {
-    return await this.userService.getReferralsList(req.user.sub);
-  }
+  // @Get('referrals/list')
+  // @ApiOperation({
+  //   summary: 'Get detailed list of users referred by current user',
+  // })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Referrals list fetched successfully',
+  //   type: ReferralsListResponseDto,
+  // })
+  // async getReferralsList(@Request() req) {
+  //   return await this.userService.getReferralsList(req.user.sub);
+  // }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a user by ID' })
